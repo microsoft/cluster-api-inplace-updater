@@ -17,31 +17,47 @@ limitations under the License.
 package main
 
 import (
-	"crypto/tls"
 	"flag"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"k8s.io/klog/v2"
 
 	upgradev1beta1 "github.com/mogliang/cluster-api-inplace-upgrader/api/v1beta1"
 	"github.com/mogliang/cluster-api-inplace-upgrader/internal/controller"
+	"github.com/mogliang/cluster-api-inplace-upgrader/internal/handlers"
+	"github.com/spf13/pflag"
+	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	cliflag "k8s.io/component-base/cli/flag"
+	runtimecatalog "sigs.k8s.io/cluster-api/exp/runtime/catalog"
+	runtimehooksv1 "sigs.k8s.io/cluster-api/exp/runtime/hooks/api/v1alpha1"
+	"sigs.k8s.io/cluster-api/exp/runtime/server"
+	"sigs.k8s.io/cluster-api/util/flags"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	//+kubebuilder:scaffold:imports
 )
 
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+
+	// catalog contains all information about RuntimeHooks.
+	catalog              = runtimecatalog.New()
+	metricsAddr          string
+	enableLeaderElection bool
+	probeAddr            string
+	secureMetrics        bool
+	enableHTTP2          bool
+	webhookPort          int
+	webhookCertDir       string
+	tlsOptions           = flags.TLSOptions{}
 )
 
 func init() {
@@ -49,14 +65,13 @@ func init() {
 
 	utilruntime.Must(upgradev1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
+
+	// Register the RuntimeHook types into the catalog.
+	_ = runtimehooksv1.AddToCatalog(catalog)
 }
 
-func main() {
-	var metricsAddr string
-	var enableLeaderElection bool
-	var probeAddr string
-	var secureMetrics bool
-	var enableHTTP2 bool
+// InitFlags initializes the flags.
+func InitFlags(fs *pflag.FlagSet) {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -66,32 +81,35 @@ func main() {
 		"If set the metrics endpoint is served securely")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
-	opts := zap.Options{
-		Development: true,
+
+	flag.IntVar(&webhookPort, "webhook-port", 9443,
+		"Webhook Server port")
+	flag.StringVar(&webhookCertDir, "webhook-cert-dir", "/tmp/k8s-webhook-server/serving-certs/",
+		"Webhook cert dir, only used when webhook-port is specified.")
+	flags.AddTLSOptions(fs, &tlsOptions)
+}
+
+func main() {
+	InitFlags(pflag.CommandLine)
+	pflag.CommandLine.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	// Set log level 2 as default.
+	if err := pflag.CommandLine.Set("v", "2"); err != nil {
+		setupLog.Error(err, "failed to set log level: %v")
+		os.Exit(1)
 	}
-	opts.BindFlags(flag.CommandLine)
-	flag.Parse()
+	pflag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	ctrl.SetLogger(klog.Background())
 
-	// if the enable-http2 flag is false (the default), http/2 should be disabled
-	// due to its vulnerabilities. More specifically, disabling http/2 will
-	// prevent from being vulnerable to the HTTP/2 Stream Cancelation and
-	// Rapid Reset CVEs. For more information see:
-	// - https://github.com/advisories/GHSA-qppj-fm5r-hxr3
-	// - https://github.com/advisories/GHSA-4374-p667-p6c8
-	disableHTTP2 := func(c *tls.Config) {
-		setupLog.Info("disabling http/2")
-		c.NextProtos = []string{"http/1.1"}
-	}
-
-	tlsOpts := []func(*tls.Config){}
-	if !enableHTTP2 {
-		tlsOpts = append(tlsOpts, disableHTTP2)
+	tlsOptionOverrides, err := flags.GetTLSOptionOverrideFuncs(tlsOptions)
+	if err != nil {
+		setupLog.Error(err, "unable to add TLS settings to the webhook server")
+		os.Exit(1)
 	}
 
 	webhookServer := webhook.NewServer(webhook.Options{
-		TLSOpts: tlsOpts,
+		TLSOpts: tlsOptionOverrides,
 	})
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
@@ -99,7 +117,7 @@ func main() {
 		Metrics: metricsserver.Options{
 			BindAddress:   metricsAddr,
 			SecureServing: secureMetrics,
-			TLSOpts:       tlsOpts,
+			TLSOpts:       tlsOptionOverrides,
 		},
 		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: probeAddr,
@@ -122,6 +140,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Create an HTTP server for serving Runtime Extensions.
+	runtimeExtensionWebhookServer, err := server.New(server.Options{
+		Port:    webhookPort,
+		CertDir: webhookCertDir,
+		TLSOpts: tlsOptionOverrides,
+		Catalog: catalog,
+	})
+	if err != nil {
+		setupLog.Error(err, "error creating runtime extension webhook server")
+		os.Exit(1)
+	}
+
+	setupLifecycleHookHandlers(mgr, runtimeExtensionWebhookServer)
+
 	if err = (&controller.UpgradeTaskReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -143,6 +175,29 @@ func main() {
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
+		os.Exit(1)
+	}
+}
+
+// setupLifecycleHookHandlers sets up Lifecycle Hooks.
+func setupLifecycleHookHandlers(mgr ctrl.Manager, runtimeExtensionWebhookServer *server.Server) {
+	lifecycleExtensionHandlers := handlers.NewExtensionHandlers(mgr.GetClient())
+
+	if err := runtimeExtensionWebhookServer.AddExtensionHandler(server.ExtensionHandler{
+		Hook:        upgradev1beta1.ControlPlaneExternalStrategy,
+		Name:        "call-controlplane-external-upgrade",
+		HandlerFunc: lifecycleExtensionHandlers.HandleControlPlaneExternalStrategy,
+	}); err != nil {
+		setupLog.Error(err, "error adding handler")
+		os.Exit(1)
+	}
+
+	if err := runtimeExtensionWebhookServer.AddExtensionHandler(server.ExtensionHandler{
+		Hook:        upgradev1beta1.MachineDeploymentExternalStrategy,
+		Name:        "call-machinedeployment-external-upgrade",
+		HandlerFunc: lifecycleExtensionHandlers.HandleMachineDeploymentExternalStrategy,
+	}); err != nil {
+		setupLog.Error(err, "error adding handler")
 		os.Exit(1)
 	}
 }
