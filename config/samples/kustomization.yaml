@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- upgrade_v1beta1_upgradetask.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples
