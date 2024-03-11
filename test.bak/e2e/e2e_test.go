@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/mogliang/cluster-api-inplace-upgrader/test/utils"
+	"github.com/mogliang/cluster-api-inplace-upgrader/test.bak/utils"
 )
 
 const namespace = "cluster-api-inplace-upgrader-system"
