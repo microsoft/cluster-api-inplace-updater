@@ -19,7 +19,6 @@ package v1beta1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -27,11 +26,11 @@ import (
 
 // UpgradeTaskSpec defines the desired state of UpgradeTask
 type UpgradeTaskSpec struct {
-	ClusterRef             *corev1.ObjectReference `json:"clusterRef,omitempty"`
-	ControlPlaneRef        *corev1.ObjectReference `json:"controlPlaneRef,omitempty"`
-	MachineDeploymentRef   *corev1.ObjectReference `json:"machineDeploymentRef,omitempty"`
-	MachinesRequireUpgrade []*clusterv1.Machine    `json:"machinesRequireUpgrade,omitempty"`
-	NewMachineSpec         *MachineSpec            `json:"newMachineSpec,omitempty"`
+	ClusterRef             *corev1.ObjectReference  `json:"clusterRef,omitempty"`
+	ControlPlaneRef        *corev1.ObjectReference  `json:"controlPlaneRef,omitempty"`
+	MachineDeploymentRef   *corev1.ObjectReference  `json:"machineDeploymentRef,omitempty"`
+	MachinesRequireUpgrade []corev1.ObjectReference `json:"machinesRequireUpgrade,omitempty"`
+	NewMachineSpec         *MachineSpec             `json:"newMachineSpec,omitempty"`
 
 	// // Template defines the template of Machine In-place upgrader
 	// Template *MachineUpgraderTemplate `json:"template,omitempty"`
