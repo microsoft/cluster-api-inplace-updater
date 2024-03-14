@@ -25,9 +25,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/klog/v2"
 
-	upgradev1beta1 "github.com/mogliang/cluster-api-inplace-upgrader/api/v1beta1"
-	"github.com/mogliang/cluster-api-inplace-upgrader/internal/controller"
-	"github.com/mogliang/cluster-api-inplace-upgrader/internal/handlers"
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -41,6 +38,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
+	upgradev1beta1 "github.com/mogliang/cluster-api-inplace-upgrader/api/v1beta1"
+	"github.com/mogliang/cluster-api-inplace-upgrader/internal/controller"
+	"github.com/mogliang/cluster-api-inplace-upgrader/internal/handlers"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -159,6 +160,13 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "UpgradeTask")
+		os.Exit(1)
+	}
+	if err = (&controller.UpgradePolicyReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "UpgradePolicy")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

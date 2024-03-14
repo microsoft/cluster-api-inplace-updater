@@ -18,8 +18,6 @@ func ControlPlaneExternalStrategy(*ControlPlaneExternalStrategyRequest, *Externa
 func MachineDeploymentExternalStrategy(*MachineDeploymentExternalStrategyRequest, *ExternalStrategyResponse) {
 }
 
-// From https://github.com/kubernetes-sigs/cluster-api/compare/main...g-gaston:cluster-api:in-place-upgrades-poc
-
 // ExternalStrategyRequest is the input to an external upgrade
 // strategy implementer.
 type ControlPlaneExternalStrategyRequest struct {

@@ -27,7 +27,7 @@ import (
 
 // UpgradeTaskSpec defines the desired state of UpgradeTask
 type UpgradeTaskSpec struct {
-	Cluster                *clusterv1.Cluster      `json:"cluster,omitempty"`
+	ClusterRef             *corev1.ObjectReference `json:"clusterRef,omitempty"`
 	ControlPlaneRef        *corev1.ObjectReference `json:"controlPlaneRef,omitempty"`
 	MachineDeploymentRef   *corev1.ObjectReference `json:"machineDeploymentRef,omitempty"`
 	MachinesRequireUpgrade []*clusterv1.Machine    `json:"machinesRequireUpgrade,omitempty"`
@@ -44,9 +44,8 @@ type UpgradeTaskStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 // UpgradeTask is the Schema for the upgradetasks API
 type UpgradeTask struct {
 	metav1.TypeMeta   `json:",inline"`
