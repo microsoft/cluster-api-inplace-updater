@@ -29,7 +29,7 @@ import (
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/mogliang/cluster-api-inplace-upgrader/test/e2e/internal/log"
+	"github.com/microsoft/cluster-api-inplace-upgrader/test/e2e/internal/log"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/util"

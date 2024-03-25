@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 
-	upgradev1beta1 "github.com/mogliang/cluster-api-inplace-upgrader/api/v1beta1"
+	upgradev1beta1 "github.com/microsoft/cluster-api-inplace-upgrader/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"

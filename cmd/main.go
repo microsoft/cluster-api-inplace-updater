@@ -39,9 +39,9 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	upgradev1beta1 "github.com/mogliang/cluster-api-inplace-upgrader/api/v1beta1"
-	"github.com/mogliang/cluster-api-inplace-upgrader/internal/controller"
-	"github.com/mogliang/cluster-api-inplace-upgrader/internal/handlers"
+	upgradev1beta1 "github.com/microsoft/cluster-api-inplace-upgrader/api/v1beta1"
+	"github.com/microsoft/cluster-api-inplace-upgrader/internal/controller"
+	"github.com/microsoft/cluster-api-inplace-upgrader/internal/handlers"
 	//+kubebuilder:scaffold:imports
 )
 
