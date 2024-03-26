@@ -26,7 +26,7 @@ type ControlPlaneExternalUpgradeRequest struct {
 	Cluster                corev1.ObjectReference
 	ControlPlane           corev1.ObjectReference
 	MachinesRequireUpgrade []corev1.ObjectReference
-	NewMachine             *MachineSpec
+	NewMachine             MachineSpec
 }
 
 // ControlPlaneExternalUpgradeResponse is the response from an external
