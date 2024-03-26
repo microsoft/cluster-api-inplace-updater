@@ -19,6 +19,8 @@ package v1beta1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/microsoft/cluster-api-inplace-upgrader/stub"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -30,7 +32,7 @@ type UpgradeTaskSpec struct {
 	ControlPlaneRef        *corev1.ObjectReference  `json:"controlPlaneRef,omitempty"`
 	MachineDeploymentRef   *corev1.ObjectReference  `json:"machineDeploymentRef,omitempty"`
 	MachinesRequireUpgrade []corev1.ObjectReference `json:"machinesRequireUpgrade,omitempty"`
-	NewMachineSpec         MachineSpec              `json:"newMachineSpec,omitempty"`
+	NewMachineSpec         stub.MachineSpec         `json:"newMachineSpec,omitempty"`
 }
 
 // UpgradeTaskStatus defines the observed state of UpgradeTask
