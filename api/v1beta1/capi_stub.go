@@ -23,8 +23,8 @@ type ControlPlaneExternalUpgradeRequest struct {
 	metav1.TypeMeta `json:",inline"`
 	// CommonRequest contains fields common to all request types.
 	CommonRequest          `json:",inline"`
-	Cluster                corev1.ObjectReference
-	ControlPlane           corev1.ObjectReference
+	ClusterRef             *corev1.ObjectReference
+	ControlPlaneRef        *corev1.ObjectReference
 	MachinesRequireUpgrade []corev1.ObjectReference
 	NewMachine             MachineSpec
 }
@@ -43,8 +43,8 @@ type MachinesExternalUpgradeRequest struct {
 	metav1.TypeMeta `json:",inline"`
 	// CommonRequest contains fields common to all request types.
 	CommonRequest          `json:",inline"`
-	Cluster                corev1.ObjectReference
-	Owner                  corev1.ObjectReference
+	ClusterRef             *corev1.ObjectReference
+	MachineDeploymentRef   *corev1.ObjectReference
 	MachinesRequireUpgrade []corev1.ObjectReference
 	NewMachine             MachineSpec
 }

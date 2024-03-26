@@ -30,21 +30,17 @@ type UpgradeTaskSpec struct {
 	ControlPlaneRef        *corev1.ObjectReference  `json:"controlPlaneRef,omitempty"`
 	MachineDeploymentRef   *corev1.ObjectReference  `json:"machineDeploymentRef,omitempty"`
 	MachinesRequireUpgrade []corev1.ObjectReference `json:"machinesRequireUpgrade,omitempty"`
-	NewMachineSpec         *MachineSpec             `json:"newMachineSpec,omitempty"`
-
-	// // Template defines the template of Machine In-place upgrader
-	// Template *MachineUpgraderTemplate `json:"template,omitempty"`
-	Phase UpgradeTaskPhase `json:"phase,omitempty"`
+	NewMachineSpec         MachineSpec              `json:"newMachineSpec,omitempty"`
 }
 
 // UpgradeTaskStatus defines the observed state of UpgradeTask
 type UpgradeTaskStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Phase UpgradeTaskPhase `json:"phase,omitempty"`
 }
 
-// +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
+
 // UpgradeTask is the Schema for the upgradetasks API
 type UpgradeTask struct {
 	metav1.TypeMeta   `json:",inline"`
