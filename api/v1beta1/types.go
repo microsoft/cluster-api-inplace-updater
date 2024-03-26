@@ -3,7 +3,7 @@ package v1beta1
 type UpgradeTaskPhase string
 
 const (
-	OngoingPhase  UpgradeTaskPhase = "Ongoing"
-	AbortPhase    UpgradeTaskPhase = "Abort"
-	CompletePhase UpgradeTaskPhase = "Complete"
+	UpgradeTaskPhaseUpgrading UpgradeTaskPhase = "Upgrading"
+	UpgradeTaskPhaseAborted   UpgradeTaskPhase = "Aborted"
+	UpgradeTaskPhaseCompleted UpgradeTaskPhase = "Completed"
 )
