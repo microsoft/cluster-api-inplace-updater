@@ -19,6 +19,7 @@ package lifecycle
 import (
 	"context"
 
+	runtimehooksv1 "sigs.k8s.io/cluster-api/exp/runtime/hooks/api/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -43,4 +44,22 @@ func (m *ExtensionHandlers) DoControlPlaneExternalUpgrade(ctx context.Context, r
 func (m *ExtensionHandlers) DoMachineDeploymentExternalUpgrade(ctx context.Context, request *stub.MachineDeploymentExternalUpgradeRequest, response *stub.MachineDeploymentExternalUpgradeResponse) {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("DoMachineDeploymentExternalUpgrade is called")
+}
+
+// DoBeforeClusterUpgrade implements the HandlerFunc for the BeforeClusterUpgrade hook.
+func (m *ExtensionHandlers) DoBeforeClusterUpgrade(ctx context.Context, request *runtimehooksv1.BeforeClusterUpgradeRequest, response *runtimehooksv1.BeforeClusterUpgradeResponse) {
+	log := ctrl.LoggerFrom(ctx)
+	log.Info("BeforeClusterUpgrade is called")
+}
+
+// DoAfterControlPlaneUpgrade implements the HandlerFunc for the AfterControlPlaneUpgrade hook.
+func (m *ExtensionHandlers) DoAfterControlPlaneUpgrade(ctx context.Context, request *runtimehooksv1.AfterControlPlaneUpgradeRequest, response *runtimehooksv1.AfterControlPlaneUpgradeResponse) {
+	log := ctrl.LoggerFrom(ctx)
+	log.Info("AfterControlPlaneUpgrade is called")
+}
+
+// DoAfterClusterUpgrade implements the HandlerFunc for the AfterClusterUpgrade hook.
+func (m *ExtensionHandlers) DoAfterClusterUpgrade(ctx context.Context, request *runtimehooksv1.AfterClusterUpgradeRequest, response *runtimehooksv1.AfterClusterUpgradeResponse) {
+	log := ctrl.LoggerFrom(ctx)
+	log.Info("AfterClusterUpgrade is called")
 }
