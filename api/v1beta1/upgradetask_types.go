@@ -23,9 +23,6 @@ import (
 	"github.com/microsoft/cluster-api-inplace-upgrader/stub"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // UpgradeTaskSpec defines the desired state of UpgradeTask
 type UpgradeTaskSpec struct {
 	ClusterRef             *corev1.ObjectReference  `json:"clusterRef,omitempty"`
