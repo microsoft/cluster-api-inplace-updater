@@ -20,6 +20,7 @@ type UpgradeTaskPhase string
 
 const (
 	UpgradeTaskPhaseUpgrading UpgradeTaskPhase = "Upgrading"
+	UpgradeTaskPhaseUpgraded  UpgradeTaskPhase = "Upgraded"
+	UpgradeTaskPhaseAborting  UpgradeTaskPhase = "Aborting"
 	UpgradeTaskPhaseAborted   UpgradeTaskPhase = "Aborted"
-	UpgradeTaskPhaseCompleted UpgradeTaskPhase = "Completed"
 )

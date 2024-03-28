@@ -30,6 +30,8 @@ type UpgradeTaskSpec struct {
 	MachineDeploymentRef   *corev1.ObjectReference  `json:"machineDeploymentRef,omitempty"`
 	MachinesRequireUpgrade []corev1.ObjectReference `json:"machinesRequireUpgrade,omitempty"`
 	NewMachineSpec         stub.MachineSpec         `json:"newMachineSpec,omitempty"`
+
+	TargetPhase UpgradeTaskPhase `json:"phase,omitempty"`
 }
 
 // UpgradeTaskStatus defines the observed state of UpgradeTask

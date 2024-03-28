@@ -715,6 +715,8 @@ spec:
                         type: object
                     type: object
                 type: object
+              phase:
+                type: string
             type: object
           status:
             description: UpgradeTaskStatus defines the observed state of UpgradeTask
