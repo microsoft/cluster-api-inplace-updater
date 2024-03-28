@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	upgradev1beta1 "github.com/mogliang/cluster-api-inplace-upgrader/api/v1beta1"
+	upgradev1beta1 "github.com/microsoft/cluster-api-inplace-upgrader/api/v1beta1"
 )
 
 // UpgradeTaskReconciler reconciles a UpgradeTask object

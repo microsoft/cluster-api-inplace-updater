@@ -1,4 +1,4 @@
-module github.com/mogliang/cluster-api-inplace-upgrader
+module github.com/microsoft/cluster-api-inplace-upgrader
 
 go 1.21
 

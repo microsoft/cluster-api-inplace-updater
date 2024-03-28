@@ -19,10 +19,9 @@ package v1beta1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+	"github.com/microsoft/cluster-api-inplace-upgrader/stub"
+)
 
 // UpgradeTaskSpec defines the desired state of UpgradeTask
 type UpgradeTaskSpec struct {
@@ -30,21 +29,19 @@ type UpgradeTaskSpec struct {
 	ControlPlaneRef        *corev1.ObjectReference  `json:"controlPlaneRef,omitempty"`
 	MachineDeploymentRef   *corev1.ObjectReference  `json:"machineDeploymentRef,omitempty"`
 	MachinesRequireUpgrade []corev1.ObjectReference `json:"machinesRequireUpgrade,omitempty"`
-	NewMachineSpec         *MachineSpec             `json:"newMachineSpec,omitempty"`
+	NewMachineSpec         stub.MachineSpec         `json:"newMachineSpec,omitempty"`
 
-	// // Template defines the template of Machine In-place upgrader
-	// Template *MachineUpgraderTemplate `json:"template,omitempty"`
-	Phase UpgradeTaskPhase `json:"phase,omitempty"`
+	TargetPhase UpgradeTaskPhase `json:"phase,omitempty"`
 }
 
 // UpgradeTaskStatus defines the observed state of UpgradeTask
 type UpgradeTaskStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Phase UpgradeTaskPhase `json:"phase,omitempty"`
 }
 
-// +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
+
 // UpgradeTask is the Schema for the upgradetasks API
 type UpgradeTask struct {
 	metav1.TypeMeta   `json:",inline"`
