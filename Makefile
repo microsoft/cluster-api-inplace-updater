@@ -284,11 +284,11 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: manifests
-manifests: $(CONTROLLER_GEN) ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+manifests: $(CONTROLLER_GEN_BIN) ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="{./api/..., ./cmd/..., ./internal/..., ./stub/...}" output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
-generate: $(CONTROLLER_GEN) ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+generate: $(CONTROLLER_GEN_BIN) ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="{./api/..., ./cmd/..., ./internal/..., ./stub/...}"
 
 .PHONY: fmt
@@ -309,11 +309,11 @@ test-e2e:
 	go test ./test/e2e/ -v -ginkgo.v
 
 .PHONY: lint
-lint: golangci-lint ## Run golangci-lint linter & yamllint
+lint: $(GOLANGCI_LINT_BIN) ## Run golangci-lint linter & yamllint
 	$(GOLANGCI_LINT) run
 
 .PHONY: lint-fix
-lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
+lint-fix: $(GOLANGCI_LINT_BIN) ## Run golangci-lint linter and perform fixes
 	$(GOLANGCI_LINT) run --fix
 
 ##@ Build
@@ -399,9 +399,16 @@ capi-docker-build-e2e:
 capi-test-e2e:
 	$(MAKE) -C cluster-api GINKGO_FOCUS="$(GINKGO_FOCUS)" test-e2e
 
-.PHONY: $(CONTROLLER_GEN)
-$(CONTROLLER_GEN): capi-$(CONTROLLER_GEN)
+.PHONY: $(CONTROLLER_GEN_BIN)
+$(CONTROLLER_GEN_BIN): capi-$(CONTROLLER_GEN_BIN)
 
-.PHONY: capi-$(CONTROLLER_GEN) # Build controller-gen from tools folder.
-capi-$(CONTROLLER_GEN):
-	$(MAKE) -C cluster-api $(CONTROLLER_GEN)
+.PHONY: capi-$(CONTROLLER_GEN_BIN) # Build controller-gen from tools folder.
+capi-$(CONTROLLER_GEN_BIN):
+	$(MAKE) -C cluster-api $(CONTROLLER_GEN_BIN)
+
+.PHONY: $(GOLANGCI_LINT_BIN)
+$(GOLANGCI_LINT_BIN): capi-$(GOLANGCI_LINT_BIN)
+
+.PHONY: capi-$(GOLANGCI_LINT_BIN)
+capi-$(GOLANGCI_LINT_BIN):
+	$(MAKE) -C cluster-api $(GOLANGCI_LINT_BIN)
