@@ -22,7 +22,7 @@ CONTAINER_TOOL ?= docker
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
-##@ Cluster API:
+##@ Cluster API: Makefile
 
 #
 # Go.
@@ -58,17 +58,18 @@ TRACE ?= 0
 # Directories.
 #
 # Full directory of where the Makefile resides
-CAPI_ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))/cluster-api
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+CAPI_ROOT_DIR:=$(ROOT_DIR)/cluster-api
 EXP_DIR := exp
 BIN_DIR := bin
-CAPI_TEST_DIR := cluster-api/test
-CAPI_TOOLS_DIR := cluster-api/hack/tools
-CAPI_TOOLS_BIN_DIR := $(abspath $(CAPI_TOOLS_DIR)/$(BIN_DIR))
+TEST_DIR := test
+TOOLS_DIR := hack/tools
+CAPI_TOOLS_BIN_DIR := $(abspath cluster-api/$(TOOLS_DIR)/$(BIN_DIR))
 DOCS_DIR := docs
-E2E_FRAMEWORK_DIR := $(CAPI_TEST_DIR)/framework
-CAPD_DIR := $(CAPI_TEST_DIR)/infrastructure/docker
-CAPIM_DIR := $(CAPI_TEST_DIR)/infrastructure/inmemory
-TEST_EXTENSION_DIR := $(CAPI_TEST_DIR)/extension
+E2E_FRAMEWORK_DIR := $(TEST_DIR)/framework
+CAPD_DIR := $(TEST_DIR)/infrastructure/docker
+CAPIM_DIR := $(TEST_DIR)/infrastructure/inmemory
+TEST_EXTENSION_DIR := cluster-api/$(TEST_DIR)/extension
 GO_INSTALL := ./cluster-api/scripts/go_install.sh
 OBSERVABILITY_DIR := cluster-api/hack/observability
 
@@ -91,7 +92,7 @@ GINKGO_NODES ?= 1
 GINKGO_TIMEOUT ?= 2h
 GINKGO_POLL_PROGRESS_AFTER ?= 60m
 GINKGO_POLL_PROGRESS_INTERVAL ?= 5m
-E2E_CONF_FILE ?= $(CAPI_ROOT_DIR)/test/e2e/config/docker.yaml
+E2E_CONF_FILE ?= $(CAPI_ROOT_DIR)/$(TEST_DIR)/e2e/config/docker.yaml
 SKIP_RESOURCE_CLEANUP ?= false
 USE_EXISTING_CLUSTER ?= false
 GINKGO_NOCOLOR ?= false
@@ -259,6 +260,11 @@ ifeq ($(SELINUX_ENABLED),1)
   DOCKER_VOL_OPTS?=:z
 endif
 
+##@ Cluster API: Makefile: Testing
+
+ARTIFACTS ?= ${ROOT_DIR}/_artifacts
+CAPI_ARTIFACTS ?= ${CAPI_ROOT_DIR}/_artifacts
+
 ##@ .PHONY
 
 .PHONY: all
@@ -389,8 +395,6 @@ undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.
 
 ##@ Cluster API
 
-GINKGO_FOCUS ?=
-
 .PHONY: capi-docker-build-e2e
 capi-docker-build-e2e:
 	$(MAKE) -C cluster-api docker-build-e2e
@@ -399,12 +403,36 @@ capi-docker-build-e2e:
 capi-test-e2e:
 	$(MAKE) -C cluster-api GINKGO_FOCUS="$(GINKGO_FOCUS)" test-e2e
 
+.PHONY: generate-e2e-templates
+generate-e2e-templates: capi-generate-e2e-templates
+
+.PHONY: capi-generate-e2e-templates
+capi-generate-e2e-templates:
+	$(MAKE) -C cluster-api generate-e2e-templates
+
+.PHONY: new-test-e2e
+new-test-e2e: $(GINKGO_BIN) generate-e2e-templates ## Run the end-to-end tests
+	$(GINKGO) -v --trace -poll-progress-after=$(GINKGO_POLL_PROGRESS_AFTER) \
+		-poll-progress-interval=$(GINKGO_POLL_PROGRESS_INTERVAL) --tags=e2e --focus="$(GINKGO_FOCUS)" \
+		$(_SKIP_ARGS) --nodes=$(GINKGO_NODES) --timeout=$(GINKGO_TIMEOUT) --no-color=$(GINKGO_NOCOLOR) \
+		--output-dir="$(ARTIFACTS)" --junit-report="junit.e2e_suite.1.xml" $(GINKGO_ARGS) $(ROOT_DIR)/$(TEST_DIR)/e2e -- \
+	    -e2e.artifacts-folder="$(CAPI_ARTIFACTS)" \
+	    -e2e.config="$(E2E_CONF_FILE)" \
+	    -e2e.skip-resource-cleanup=$(SKIP_RESOURCE_CLEANUP) -e2e.use-existing-cluster=$(USE_EXISTING_CLUSTER)
+
 .PHONY: $(CONTROLLER_GEN_BIN)
 $(CONTROLLER_GEN_BIN): capi-$(CONTROLLER_GEN_BIN)
 
-.PHONY: capi-$(CONTROLLER_GEN_BIN) # Build controller-gen from tools folder.
+.PHONY: capi-$(CONTROLLER_GEN_BIN)
 capi-$(CONTROLLER_GEN_BIN):
 	$(MAKE) -C cluster-api $(CONTROLLER_GEN_BIN)
+
+.PHONY: $(GINKGO_BIN)
+$(GINKGO_BIN): capi-$(GINKGO_BIN)
+
+.PHONY: capi-$(GINKGO_BIN)
+capi-$(GINKGO_BIN):
+	$(MAKE) -C cluster-api $(GINKGO_BIN)
 
 .PHONY: $(GOLANGCI_LINT_BIN)
 $(GOLANGCI_LINT_BIN): capi-$(GOLANGCI_LINT_BIN)
