@@ -58,26 +58,26 @@ TRACE ?= 0
 # Directories.
 #
 # Full directory of where the Makefile resides
-ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+CAPI_ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))/cluster-api
 EXP_DIR := exp
 BIN_DIR := bin
-TEST_DIR := test
-TOOLS_DIR := hack/tools
-TOOLS_BIN_DIR := $(abspath $(TOOLS_DIR)/$(BIN_DIR))
+CAPI_TEST_DIR := cluster-api/test
+CAPI_TOOLS_DIR := cluster-api/hack/tools
+CAPI_TOOLS_BIN_DIR := $(abspath $(CAPI_TOOLS_DIR)/$(BIN_DIR))
 DOCS_DIR := docs
-E2E_FRAMEWORK_DIR := $(TEST_DIR)/framework
-CAPD_DIR := $(TEST_DIR)/infrastructure/docker
-CAPIM_DIR := $(TEST_DIR)/infrastructure/inmemory
-TEST_EXTENSION_DIR := $(TEST_DIR)/extension
-GO_INSTALL := ./scripts/go_install.sh
-OBSERVABILITY_DIR := hack/observability
+E2E_FRAMEWORK_DIR := $(CAPI_TEST_DIR)/framework
+CAPD_DIR := $(CAPI_TEST_DIR)/infrastructure/docker
+CAPIM_DIR := $(CAPI_TEST_DIR)/infrastructure/inmemory
+TEST_EXTENSION_DIR := $(CAPI_TEST_DIR)/extension
+GO_INSTALL := ./cluster-api/scripts/go_install.sh
+OBSERVABILITY_DIR := cluster-api/hack/observability
 
-export PATH := $(abspath $(TOOLS_BIN_DIR)):$(PATH)
+export PATH := $(abspath $(CAPI_TOOLS_BIN_DIR)):$(PATH)
 
 # Set --output-base for conversion-gen if we are not within GOPATH
-ifneq ($(abspath $(ROOT_DIR)),$(shell go env GOPATH)/src/sigs.k8s.io/cluster-api)
-	CONVERSION_GEN_OUTPUT_BASE := --output-base=$(ROOT_DIR)
-	CONVERSION_GEN_OUTPUT_BASE_CAPD := --output-base=$(ROOT_DIR)/$(CAPD_DIR)
+ifneq ($(abspath $(CAPI_ROOT_DIR)),$(shell go env GOPATH)/src/sigs.k8s.io/cluster-api)
+	CONVERSION_GEN_OUTPUT_BASE := --output-base=$(CAPI_ROOT_DIR)
+	CONVERSION_GEN_OUTPUT_BASE_CAPD := --output-base=$(CAPI_ROOT_DIR)/$(CAPD_DIR)
 else
 	export GOPATH := $(shell go env GOPATH)
 endif
@@ -91,7 +91,7 @@ GINKGO_NODES ?= 1
 GINKGO_TIMEOUT ?= 2h
 GINKGO_POLL_PROGRESS_AFTER ?= 60m
 GINKGO_POLL_PROGRESS_INTERVAL ?= 5m
-E2E_CONF_FILE ?= $(ROOT_DIR)/$(TEST_DIR)/e2e/config/docker.yaml
+E2E_CONF_FILE ?= $(CAPI_ROOT_DIR)/test/e2e/config/docker.yaml
 SKIP_RESOURCE_CLEANUP ?= false
 USE_EXISTING_CLUSTER ?= false
 GINKGO_NOCOLOR ?= false
@@ -110,39 +110,39 @@ get_go_version = $(shell go list -m $1 | awk '{print $$2}')
 # Note: Need to use abspath so we can invoke these from subdirectories
 KUSTOMIZE_VER := v4.5.2
 KUSTOMIZE_BIN := kustomize
-KUSTOMIZE := $(abspath $(TOOLS_BIN_DIR)/$(KUSTOMIZE_BIN)-$(KUSTOMIZE_VER))
+KUSTOMIZE := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(KUSTOMIZE_BIN)-$(KUSTOMIZE_VER))
 KUSTOMIZE_PKG := sigs.k8s.io/kustomize/kustomize/v4
 
 SETUP_ENVTEST_VER := v0.0.0-20240215143116-d0396a3d6f9f
 SETUP_ENVTEST_BIN := setup-envtest
-SETUP_ENVTEST := $(abspath $(TOOLS_BIN_DIR)/$(SETUP_ENVTEST_BIN)-$(SETUP_ENVTEST_VER))
+SETUP_ENVTEST := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(SETUP_ENVTEST_BIN)-$(SETUP_ENVTEST_VER))
 SETUP_ENVTEST_PKG := sigs.k8s.io/controller-runtime/tools/setup-envtest
 
 CONTROLLER_GEN_VER := v0.14.0
 CONTROLLER_GEN_BIN := controller-gen
-CONTROLLER_GEN := $(abspath $(TOOLS_BIN_DIR)/$(CONTROLLER_GEN_BIN)-$(CONTROLLER_GEN_VER))
+CONTROLLER_GEN := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(CONTROLLER_GEN_BIN)-$(CONTROLLER_GEN_VER))
 CONTROLLER_GEN_PKG := sigs.k8s.io/controller-tools/cmd/controller-gen
 
 GOTESTSUM_VER := v1.11.0
 GOTESTSUM_BIN := gotestsum
-GOTESTSUM := $(abspath $(TOOLS_BIN_DIR)/$(GOTESTSUM_BIN)-$(GOTESTSUM_VER))
+GOTESTSUM := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GOTESTSUM_BIN)-$(GOTESTSUM_VER))
 GOTESTSUM_PKG := gotest.tools/gotestsum
 
 CONVERSION_GEN_VER := v0.29.2
 CONVERSION_GEN_BIN := conversion-gen
 # We are intentionally using the binary without version suffix, to avoid the version
 # in generated files.
-CONVERSION_GEN := $(abspath $(TOOLS_BIN_DIR)/$(CONVERSION_GEN_BIN))
+CONVERSION_GEN := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(CONVERSION_GEN_BIN))
 CONVERSION_GEN_PKG := k8s.io/code-generator/cmd/conversion-gen
 
 ENVSUBST_BIN := envsubst
 ENVSUBST_VER := $(call get_go_version,github.com/drone/envsubst/v2)
-ENVSUBST := $(abspath $(TOOLS_BIN_DIR)/$(ENVSUBST_BIN)-$(ENVSUBST_VER))
+ENVSUBST := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(ENVSUBST_BIN)-$(ENVSUBST_VER))
 ENVSUBST_PKG := github.com/drone/envsubst/v2/cmd/envsubst
 
 GO_APIDIFF_VER := v0.8.2
 GO_APIDIFF_BIN := go-apidiff
-GO_APIDIFF := $(abspath $(TOOLS_BIN_DIR)/$(GO_APIDIFF_BIN)-$(GO_APIDIFF_VER))
+GO_APIDIFF := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GO_APIDIFF_BIN)-$(GO_APIDIFF_VER))
 GO_APIDIFF_PKG := github.com/joelanford/go-apidiff
 
 HADOLINT_VER := v2.12.0
@@ -154,55 +154,55 @@ TRIVY_VER := 0.49.1
 
 KPROMO_VER := v4.0.5
 KPROMO_BIN := kpromo
-KPROMO :=  $(abspath $(TOOLS_BIN_DIR)/$(KPROMO_BIN)-$(KPROMO_VER))
+KPROMO :=  $(abspath $(CAPI_TOOLS_BIN_DIR)/$(KPROMO_BIN)-$(KPROMO_VER))
 # KPROMO_PKG may have to be changed if KPROMO_VER increases its major version.
 KPROMO_PKG := sigs.k8s.io/promo-tools/v4/cmd/kpromo
 
 YQ_VER := v4.35.2
 YQ_BIN := yq
-YQ :=  $(abspath $(TOOLS_BIN_DIR)/$(YQ_BIN)-$(YQ_VER))
+YQ :=  $(abspath $(CAPI_TOOLS_BIN_DIR)/$(YQ_BIN)-$(YQ_VER))
 YQ_PKG := github.com/mikefarah/yq/v4
 
 PLANTUML_VER := 1.2024.3
 
 GINKGO_BIN := ginkgo
 GINKGO_VER := $(call get_go_version,github.com/onsi/ginkgo/v2)
-GINKGO := $(abspath $(TOOLS_BIN_DIR)/$(GINKGO_BIN)-$(GINKGO_VER))
+GINKGO := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GINKGO_BIN)-$(GINKGO_VER))
 GINKGO_PKG := github.com/onsi/ginkgo/v2/ginkgo
 
 GOLANGCI_LINT_BIN := golangci-lint
-GOLANGCI_LINT_VER := $(shell cat .github/workflows/pr-golangci-lint.yaml | grep [[:space:]]version: | sed 's/.*version: //')
-GOLANGCI_LINT := $(abspath $(TOOLS_BIN_DIR)/$(GOLANGCI_LINT_BIN)-$(GOLANGCI_LINT_VER))
+GOLANGCI_LINT_VER := $(shell cat cluster-api/.github/workflows/pr-golangci-lint.yaml | grep [[:space:]]version: | sed 's/.*version: //')
+GOLANGCI_LINT := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GOLANGCI_LINT_BIN)-$(GOLANGCI_LINT_VER))
 GOLANGCI_LINT_PKG := github.com/golangci/golangci-lint/cmd/golangci-lint
 
 GOVULNCHECK_BIN := govulncheck
 GOVULNCHECK_VER := v1.0.4
-GOVULNCHECK := $(abspath $(TOOLS_BIN_DIR)/$(GOVULNCHECK_BIN)-$(GOVULNCHECK_VER))
+GOVULNCHECK := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GOVULNCHECK_BIN)-$(GOVULNCHECK_VER))
 GOVULNCHECK_PKG := golang.org/x/vuln/cmd/govulncheck
 
 IMPORT_BOSS_BIN := import-boss
 IMPORT_BOSS_VER := v0.28.1
-IMPORT_BOSS := $(abspath $(TOOLS_BIN_DIR)/$(IMPORT_BOSS_BIN))
+IMPORT_BOSS := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(IMPORT_BOSS_BIN))
 IMPORT_BOSS_PKG := k8s.io/code-generator/cmd/import-boss
 
 CONVERSION_VERIFIER_BIN := conversion-verifier
-CONVERSION_VERIFIER := $(abspath $(TOOLS_BIN_DIR)/$(CONVERSION_VERIFIER_BIN))
+CONVERSION_VERIFIER := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(CONVERSION_VERIFIER_BIN))
 
 OPENAPI_GEN_VER := 70dd376
 OPENAPI_GEN_BIN := openapi-gen
 # We are intentionally using the binary without version suffix, to avoid the version
 # in generated files.
-OPENAPI_GEN := $(abspath $(TOOLS_BIN_DIR)/$(OPENAPI_GEN_BIN))
+OPENAPI_GEN := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(OPENAPI_GEN_BIN))
 OPENAPI_GEN_PKG := k8s.io/kube-openapi/cmd/openapi-gen
 
 PROWJOB_GEN_BIN := prowjob-gen
-PROWJOB_GEN := $(abspath $(TOOLS_BIN_DIR)/$(PROWJOB_GEN_BIN))
+PROWJOB_GEN := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(PROWJOB_GEN_BIN))
 
 RUNTIME_OPENAPI_GEN_BIN := runtime-openapi-gen
-RUNTIME_OPENAPI_GEN := $(abspath $(TOOLS_BIN_DIR)/$(RUNTIME_OPENAPI_GEN_BIN))
+RUNTIME_OPENAPI_GEN := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(RUNTIME_OPENAPI_GEN_BIN))
 
 TILT_PREPARE_BIN := tilt-prepare
-TILT_PREPARE := $(abspath $(TOOLS_BIN_DIR)/$(TILT_PREPARE_BIN))
+TILT_PREPARE := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(TILT_PREPARE_BIN))
 
 # Define Docker related variables. Releases should modify and double check these vars.
 REGISTRY ?= gcr.io/$(shell gcloud config get-value project)
@@ -284,12 +284,12 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: manifests
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+manifests: $(CONTROLLER_GEN) ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="{./api/..., ./cmd/..., ./internal/..., ./stub/...}" output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
-generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+generate: $(CONTROLLER_GEN) ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="{./api/..., ./cmd/..., ./internal/..., ./stub/...}"
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
@@ -399,56 +399,9 @@ capi-docker-build-e2e:
 capi-test-e2e:
 	$(MAKE) -C cluster-api GINKGO_FOCUS="$(GINKGO_FOCUS)" test-e2e
 
-##@ Dependencies
+.PHONY: $(CONTROLLER_GEN)
+$(CONTROLLER_GEN): capi-$(CONTROLLER_GEN)
 
-## Location to install dependencies to
-LOCALBIN ?= $(shell pwd)/bin
-$(LOCALBIN):
-	mkdir -p $(LOCALBIN)
-
-## Tool Binaries
-KUBECTL ?= kubectl
-KUSTOMIZE ?= $(LOCALBIN)/kustomize-$(KUSTOMIZE_VERSION)
-CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
-ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
-GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
-
-## Tool Versions
-KUSTOMIZE_VERSION ?= v5.3.0
-CONTROLLER_TOOLS_VERSION ?= v0.14.0
-ENVTEST_VERSION ?= latest
-GOLANGCI_LINT_VERSION ?= v1.54.2
-
-.PHONY: kustomize
-kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
-$(KUSTOMIZE): $(LOCALBIN)
-	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
-
-.PHONY: controller-gen
-controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
-$(CONTROLLER_GEN): $(LOCALBIN)
-	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
-
-.PHONY: envtest
-envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
-$(ENVTEST): $(LOCALBIN)
-	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
-
-.PHONY: golangci-lint
-golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
-$(GOLANGCI_LINT): $(LOCALBIN)
-	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,${GOLANGCI_LINT_VERSION})
-
-# go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
-# $1 - target path with name of binary (ideally with version)
-# $2 - package url which can be installed
-# $3 - specific version of package
-define go-install-tool
-@[ -f $(1) ] || { \
-set -e; \
-package=$(2)@$(3) ;\
-echo "Downloading $${package}" ;\
-GOBIN=$(LOCALBIN) go install $${package} ;\
-mv "$$(echo "$(1)" | sed "s/-$(3)$$//")" $(1) ;\
-}
-endef
+.PHONY: capi-$(CONTROLLER_GEN) # Build controller-gen from tools folder.
+capi-$(CONTROLLER_GEN):
+	$(MAKE) -C cluster-api $(CONTROLLER_GEN)
