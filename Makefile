@@ -412,6 +412,9 @@ capi-generate-e2e-templates:
 
 .PHONY: new-test-e2e
 new-test-e2e: $(GINKGO_BIN) generate-e2e-templates ## Run the end-to-end tests
+	CNI="../../cluster-api/test/e2e/data/cni/kindnet/kindnet.yaml" \
+	KUBETEST_CONFIGURATION="../../cluster-api/test/e2e/data/kubetest/conformance.yaml" \
+	AUTOSCALER_WORKLOAD="../../cluster-api/test/e2e/data/autoscaler/autoscaler-to-workload-workload.yaml" \
 	$(GINKGO) -v --trace -poll-progress-after=$(GINKGO_POLL_PROGRESS_AFTER) \
 		-poll-progress-interval=$(GINKGO_POLL_PROGRESS_INTERVAL) --tags=e2e --focus="$(GINKGO_FOCUS)" \
 		$(_SKIP_ARGS) --nodes=$(GINKGO_NODES) --timeout=$(GINKGO_TIMEOUT) --no-color=$(GINKGO_NOCOLOR) \
