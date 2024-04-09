@@ -309,11 +309,6 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
-# Utilize Kind or modify the e2e tests to load the image locally, enabling compatibility with other vendors.
-.PHONY: test-e2e  # Run the e2e tests against a Kind k8s instance that is spun up.
-test-e2e:
-	go test ./test/e2e/ -v -ginkgo.v
-
 .PHONY: lint
 lint: $(GOLANGCI_LINT_BIN) ## Run golangci-lint linter & yamllint
 	$(GOLANGCI_LINT) run
@@ -399,10 +394,6 @@ undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.
 capi-docker-build-e2e:
 	$(MAKE) -C cluster-api docker-build-e2e
 
-.PHONY: capi-test-e2e
-capi-test-e2e:
-	$(MAKE) -C cluster-api GINKGO_FOCUS="$(GINKGO_FOCUS)" test-e2e
-
 .PHONY: generate-e2e-templates
 generate-e2e-templates: capi-generate-e2e-templates
 
@@ -410,8 +401,8 @@ generate-e2e-templates: capi-generate-e2e-templates
 capi-generate-e2e-templates:
 	$(MAKE) -C cluster-api generate-e2e-templates
 
-.PHONY: new-test-e2e
-new-test-e2e: $(GINKGO_BIN) generate-e2e-templates ## Run the end-to-end tests
+.PHONY: test-e2e
+test-e2e: $(GINKGO_BIN) generate-e2e-templates ## Run the end-to-end tests
 	CNI="../../cluster-api/test/e2e/data/cni/kindnet/kindnet.yaml" \
 	KUBETEST_CONFIGURATION="../../cluster-api/test/e2e/data/kubetest/conformance.yaml" \
 	AUTOSCALER_WORKLOAD="../../cluster-api/test/e2e/data/autoscaler/autoscaler-to-workload-workload.yaml" \
