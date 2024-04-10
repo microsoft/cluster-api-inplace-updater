@@ -344,35 +344,35 @@ test-e2e: $(GINKGO_BIN) generate-e2e-templates ## Run the end-to-end tests
 	    -e2e.skip-resource-cleanup=$(SKIP_RESOURCE_CLEANUP) -e2e.use-existing-cluster=$(USE_EXISTING_CLUSTER)
 
 .PHONY: $(CONTROLLER_GEN_BIN)
-$(CONTROLLER_GEN_BIN): capi-$(CONTROLLER_GEN_BIN)
+controller-gen: capi-$(CONTROLLER_GEN_BIN) ## Build controller-gen from tools folder.
 
 .PHONY: capi-$(CONTROLLER_GEN_BIN)
 capi-$(CONTROLLER_GEN_BIN):
 	$(MAKE) -C cluster-api $(CONTROLLER_GEN_BIN)
 
 .PHONY: $(KUSTOMIZE_BIN)
-$(KUSTOMIZE_BIN): capi-$(KUSTOMIZE_BIN)
+kustomize: capi-$(KUSTOMIZE_BIN) ## Build kustomize from tools folder.
 
 .PHONY: capi-$(KUSTOMIZE_BIN)
 capi-$(KUSTOMIZE_BIN):
 	$(MAKE) -C cluster-api $(KUSTOMIZE_BIN)
 
 .PHONY: $(SETUP_ENVTEST_BIN)
-$(SETUP_ENVTEST_BIN): capi-$(SETUP_ENVTEST_BIN)
+setup-envtest: capi-$(SETUP_ENVTEST_BIN) ## Build setup-envtest from tools folder.
 
 .PHONY: capi-$(SETUP_ENVTEST_BIN)
 capi-$(SETUP_ENVTEST_BIN):
 	$(MAKE) -C cluster-api $(SETUP_ENVTEST_BIN)
 
 .PHONY: $(GINKGO_BIN)
-$(GINKGO_BIN): capi-$(GINKGO_BIN)
+ginkgo: capi-$(GINKGO_BIN) ## Build ginkgo from tools folder.
 
 .PHONY: capi-$(GINKGO_BIN)
 capi-$(GINKGO_BIN):
 	$(MAKE) -C cluster-api $(GINKGO_BIN)
 
 .PHONY: $(GOLANGCI_LINT_BIN)
-$(GOLANGCI_LINT_BIN): capi-$(GOLANGCI_LINT_BIN)
+golangci-lint: capi-$(GOLANGCI_LINT_BIN) ## Build golangci-lint from tools folder.
 
 .PHONY: capi-$(GOLANGCI_LINT_BIN)
 capi-$(GOLANGCI_LINT_BIN):
