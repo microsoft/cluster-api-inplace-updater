@@ -124,48 +124,6 @@ CONTROLLER_GEN_BIN := controller-gen
 CONTROLLER_GEN := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(CONTROLLER_GEN_BIN)-$(CONTROLLER_GEN_VER))
 CONTROLLER_GEN_PKG := sigs.k8s.io/controller-tools/cmd/controller-gen
 
-GOTESTSUM_VER := v1.11.0
-GOTESTSUM_BIN := gotestsum
-GOTESTSUM := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GOTESTSUM_BIN)-$(GOTESTSUM_VER))
-GOTESTSUM_PKG := gotest.tools/gotestsum
-
-CONVERSION_GEN_VER := v0.29.2
-CONVERSION_GEN_BIN := conversion-gen
-# We are intentionally using the binary without version suffix, to avoid the version
-# in generated files.
-CONVERSION_GEN := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(CONVERSION_GEN_BIN))
-CONVERSION_GEN_PKG := k8s.io/code-generator/cmd/conversion-gen
-
-ENVSUBST_BIN := envsubst
-ENVSUBST_VER := $(call get_go_version,github.com/drone/envsubst/v2)
-ENVSUBST := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(ENVSUBST_BIN)-$(ENVSUBST_VER))
-ENVSUBST_PKG := github.com/drone/envsubst/v2/cmd/envsubst
-
-GO_APIDIFF_VER := v0.8.2
-GO_APIDIFF_BIN := go-apidiff
-GO_APIDIFF := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GO_APIDIFF_BIN)-$(GO_APIDIFF_VER))
-GO_APIDIFF_PKG := github.com/joelanford/go-apidiff
-
-HADOLINT_VER := v2.12.0
-HADOLINT_FAILURE_THRESHOLD = warning
-
-SHELLCHECK_VER := v0.9.0
-
-TRIVY_VER := 0.49.1
-
-KPROMO_VER := v4.0.5
-KPROMO_BIN := kpromo
-KPROMO :=  $(abspath $(CAPI_TOOLS_BIN_DIR)/$(KPROMO_BIN)-$(KPROMO_VER))
-# KPROMO_PKG may have to be changed if KPROMO_VER increases its major version.
-KPROMO_PKG := sigs.k8s.io/promo-tools/v4/cmd/kpromo
-
-YQ_VER := v4.35.2
-YQ_BIN := yq
-YQ :=  $(abspath $(CAPI_TOOLS_BIN_DIR)/$(YQ_BIN)-$(YQ_VER))
-YQ_PKG := github.com/mikefarah/yq/v4
-
-PLANTUML_VER := 1.2024.3
-
 GINKGO_BIN := ginkgo
 GINKGO_VER := $(call get_go_version,github.com/onsi/ginkgo/v2)
 GINKGO := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GINKGO_BIN)-$(GINKGO_VER))
@@ -175,35 +133,6 @@ GOLANGCI_LINT_BIN := golangci-lint
 GOLANGCI_LINT_VER := $(shell cat cluster-api/.github/workflows/pr-golangci-lint.yaml | grep [[:space:]]version: | sed 's/.*version: //')
 GOLANGCI_LINT := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GOLANGCI_LINT_BIN)-$(GOLANGCI_LINT_VER))
 GOLANGCI_LINT_PKG := github.com/golangci/golangci-lint/cmd/golangci-lint
-
-GOVULNCHECK_BIN := govulncheck
-GOVULNCHECK_VER := v1.0.4
-GOVULNCHECK := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GOVULNCHECK_BIN)-$(GOVULNCHECK_VER))
-GOVULNCHECK_PKG := golang.org/x/vuln/cmd/govulncheck
-
-IMPORT_BOSS_BIN := import-boss
-IMPORT_BOSS_VER := v0.28.1
-IMPORT_BOSS := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(IMPORT_BOSS_BIN))
-IMPORT_BOSS_PKG := k8s.io/code-generator/cmd/import-boss
-
-CONVERSION_VERIFIER_BIN := conversion-verifier
-CONVERSION_VERIFIER := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(CONVERSION_VERIFIER_BIN))
-
-OPENAPI_GEN_VER := 70dd376
-OPENAPI_GEN_BIN := openapi-gen
-# We are intentionally using the binary without version suffix, to avoid the version
-# in generated files.
-OPENAPI_GEN := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(OPENAPI_GEN_BIN))
-OPENAPI_GEN_PKG := k8s.io/kube-openapi/cmd/openapi-gen
-
-PROWJOB_GEN_BIN := prowjob-gen
-PROWJOB_GEN := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(PROWJOB_GEN_BIN))
-
-RUNTIME_OPENAPI_GEN_BIN := runtime-openapi-gen
-RUNTIME_OPENAPI_GEN := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(RUNTIME_OPENAPI_GEN_BIN))
-
-TILT_PREPARE_BIN := tilt-prepare
-TILT_PREPARE := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(TILT_PREPARE_BIN))
 
 # Define Docker related variables. Releases should modify and double check these vars.
 REGISTRY ?= gcr.io/$(shell gcloud config get-value project)
