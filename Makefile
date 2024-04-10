@@ -51,9 +51,6 @@ export KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT ?= 60s
 # This option is for running docker manifest command
 export DOCKER_CLI_EXPERIMENTAL := enabled
 
-# Enables shell script tracing. Enable by running: TRACE=1 make <target>
-TRACE ?= 0
-
 #
 # Directories.
 #
