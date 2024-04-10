@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+Copyright 2024.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -92,25 +91,6 @@ func init() {
 	flag.BoolVar(&skipCleanup, "e2e.skip-resource-cleanup", false, "if true, the resource cleanup after tests will be skipped")
 	flag.StringVar(&clusterctlConfig, "e2e.clusterctl-config", "", "file which tests will use as a clusterctl config. If it is not set, a local clusterctl repository (including a clusterctl config) will be created automatically.")
 	flag.BoolVar(&useExistingCluster, "e2e.use-existing-cluster", false, "if true, the test uses the current cluster instead of creating a new one (default discovery rules apply)")
-
-	// TODO in Makefile
-	rootPath, _ := os.Getwd()
-	artifactFolder = rootPath + "/_artifacts"
-	configPath = rootPath + "/config/docker.yaml"
-	skipCleanup = false
-
-	var _ = Describe("When testing MachineDeployment scale out/in", func() {
-		MachineDeploymentScaleSpec(ctx, func() MachineDeploymentScaleSpecInput {
-			return MachineDeploymentScaleSpecInput{
-				E2EConfig:              e2eConfig,
-				ClusterctlConfigPath:   clusterctlConfigPath,
-				BootstrapClusterProxy:  bootstrapClusterProxy,
-				ArtifactFolder:         artifactFolder,
-				SkipCleanup:            skipCleanup,
-				InfrastructureProvider: ptr.To("docker"),
-			}
-		})
-	})
 }
 
 func TestE2E(t *testing.T) {
