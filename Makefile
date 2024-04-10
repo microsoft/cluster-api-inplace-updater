@@ -65,23 +65,9 @@ BIN_DIR := bin
 TEST_DIR := test
 TOOLS_DIR := hack/tools
 CAPI_TOOLS_BIN_DIR := $(abspath cluster-api/$(TOOLS_DIR)/$(BIN_DIR))
-DOCS_DIR := docs
-E2E_FRAMEWORK_DIR := $(TEST_DIR)/framework
-CAPD_DIR := $(TEST_DIR)/infrastructure/docker
-CAPIM_DIR := $(TEST_DIR)/infrastructure/inmemory
-TEST_EXTENSION_DIR := cluster-api/$(TEST_DIR)/extension
 GO_INSTALL := ./cluster-api/scripts/go_install.sh
-OBSERVABILITY_DIR := cluster-api/hack/observability
 
 export PATH := $(abspath $(CAPI_TOOLS_BIN_DIR)):$(PATH)
-
-# Set --output-base for conversion-gen if we are not within GOPATH
-ifneq ($(abspath $(CAPI_ROOT_DIR)),$(shell go env GOPATH)/src/sigs.k8s.io/cluster-api)
-	CONVERSION_GEN_OUTPUT_BASE := --output-base=$(CAPI_ROOT_DIR)
-	CONVERSION_GEN_OUTPUT_BASE_CAPD := --output-base=$(CAPI_ROOT_DIR)/$(CAPD_DIR)
-else
-	export GOPATH := $(shell go env GOPATH)
-endif
 
 #
 # Ginkgo configuration.
@@ -133,61 +119,6 @@ GOLANGCI_LINT_BIN := golangci-lint
 GOLANGCI_LINT_VER := $(shell cat cluster-api/.github/workflows/pr-golangci-lint.yaml | grep [[:space:]]version: | sed 's/.*version: //')
 GOLANGCI_LINT := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GOLANGCI_LINT_BIN)-$(GOLANGCI_LINT_VER))
 GOLANGCI_LINT_PKG := github.com/golangci/golangci-lint/cmd/golangci-lint
-
-# Define Docker related variables. Releases should modify and double check these vars.
-REGISTRY ?= gcr.io/$(shell gcloud config get-value project)
-PROD_REGISTRY ?= registry.k8s.io/cluster-api
-
-STAGING_REGISTRY ?= gcr.io/k8s-staging-cluster-api
-STAGING_BUCKET ?= artifacts.k8s-staging-cluster-api.appspot.com
-
-# core
-IMAGE_NAME ?= cluster-api-controller
-CONTROLLER_IMG ?= $(REGISTRY)/$(IMAGE_NAME)
-
-# bootstrap
-KUBEADM_BOOTSTRAP_IMAGE_NAME ?= kubeadm-bootstrap-controller
-KUBEADM_BOOTSTRAP_CONTROLLER_IMG ?= $(REGISTRY)/$(KUBEADM_BOOTSTRAP_IMAGE_NAME)
-
-# control plane
-KUBEADM_CONTROL_PLANE_IMAGE_NAME ?= kubeadm-control-plane-controller
-KUBEADM_CONTROL_PLANE_CONTROLLER_IMG ?= $(REGISTRY)/$(KUBEADM_CONTROL_PLANE_IMAGE_NAME)
-
-# capd
-CAPD_IMAGE_NAME ?= capd-manager
-CAPD_CONTROLLER_IMG ?= $(REGISTRY)/$(CAPD_IMAGE_NAME)
-
-# capim
-CAPIM_IMAGE_NAME ?= capim-manager
-CAPIM_CONTROLLER_IMG ?= $(REGISTRY)/$(CAPIM_IMAGE_NAME)
-
-# clusterctl
-CLUSTERCTL_MANIFEST_DIR := cmd/clusterctl/config
-CLUSTERCTL_IMAGE_NAME ?= clusterctl
-CLUSTERCTL_IMG ?= $(REGISTRY)/$(CLUSTERCTL_IMAGE_NAME)
-
-# test extension
-TEST_EXTENSION_IMAGE_NAME ?= test-extension
-TEST_EXTENSION_IMG ?= $(REGISTRY)/$(TEST_EXTENSION_IMAGE_NAME)
-
-# kind
-CAPI_KIND_CLUSTER_NAME ?= capi-test
-
-# It is set by Prow GIT_TAG, a git-based tag of the form vYYYYMMDD-hash, e.g., v20210120-v0.3.10-308-gc61521971
-
-TAG ?= dev
-ARCH ?= $(shell go env GOARCH)
-ALL_ARCH ?= amd64 arm arm64 ppc64le s390x
-
-# Allow overriding the imagePullPolicy
-PULL_POLICY ?= Always
-
-# Hosts running SELinux need :z added to volume mounts
-SELINUX_ENABLED := $(shell cat /sys/fs/selinux/enforce 2> /dev/null || echo 0)
-
-ifeq ($(SELINUX_ENABLED),1)
-  DOCKER_VOL_OPTS?=:z
-endif
 
 ##@ Cluster API: Makefile: Testing
 
