@@ -29,6 +29,7 @@ import (
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/microsoft/cluster-api-inplace-upgrader/test/e2e/internal/log"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/util"
@@ -65,7 +66,7 @@ func setupSpecNamespace(ctx context.Context, specName string, clusterProxy frame
 	})
 
 	if postNamespaceCreated != nil {
-		Logf("Calling postNamespaceCreated for namespace %s", namespace.Name)
+		log.Logf("Calling postNamespaceCreated for namespace %s", namespace.Name)
 		postNamespaceCreated(clusterProxy, namespace.Name)
 	}
 
@@ -159,10 +160,8 @@ func (m *validVersionMatcher) NegatedFailureMessage(_ interface{}) (message stri
 	return fmt.Sprintf("Expected\n%s\n%s", m.version, " not to be a valid version ")
 }
 
-/*
-from cluster-api/test/e2e/internal/log/log.go
-*/
-
-func Logf(format string, a ...interface{}) {
-	fmt.Fprintf(GinkgoWriter, "INFO: "+format+"\n", a...)
-}
+// // GetStableReleaseOfMinor returns latest stable version of minorRelease.
+// func GetStableReleaseOfMinor(ctx context.Context, minorRelease string) (string, error) {
+// 	releaseMarker := fmt.Sprintf(releaseMarkerPrefix, minorRelease)
+// 	return clusterctl.ResolveRelease(ctx, releaseMarker)
+// }

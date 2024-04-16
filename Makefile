@@ -22,108 +22,6 @@ CONTAINER_TOOL ?= docker
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
-##@ Cluster API: Makefile
-
-#
-# Go.
-#
-GO_VERSION ?= 1.21.8
-GO_DIRECTIVE_VERSION ?= 1.21
-GO_CONTAINER_IMAGE ?= docker.io/library/golang:$(GO_VERSION)
-
-# Use GOPROXY environment variable if set
-GOPROXY := $(shell go env GOPROXY)
-ifeq ($(GOPROXY),)
-GOPROXY := https://proxy.golang.org
-endif
-export GOPROXY
-
-# Active module mode, as we use go modules to manage dependencies
-export GO111MODULE=on
-
-#
-# Kubebuilder.
-#
-export KUBEBUILDER_ENVTEST_KUBERNETES_VERSION ?= 1.29.0
-export KUBEBUILDER_CONTROLPLANE_START_TIMEOUT ?= 60s
-export KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT ?= 60s
-
-# This option is for running docker manifest command
-export DOCKER_CLI_EXPERIMENTAL := enabled
-
-#
-# Directories.
-#
-# Full directory of where the Makefile resides
-ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-CAPI_ROOT_DIR:=$(ROOT_DIR)/cluster-api
-EXP_DIR := exp
-BIN_DIR := bin
-TEST_DIR := test
-TOOLS_DIR := hack/tools
-CAPI_TOOLS_BIN_DIR := $(abspath cluster-api/$(TOOLS_DIR)/$(BIN_DIR))
-GO_INSTALL := ./cluster-api/scripts/go_install.sh
-
-export PATH := $(abspath $(CAPI_TOOLS_BIN_DIR)):$(PATH)
-
-#
-# Ginkgo configuration.
-#
-GINKGO_FOCUS ?=
-GINKGO_SKIP ?=
-GINKGO_NODES ?= 1
-GINKGO_TIMEOUT ?= 2h
-GINKGO_POLL_PROGRESS_AFTER ?= 60m
-GINKGO_POLL_PROGRESS_INTERVAL ?= 5m
-E2E_CONF_FILE ?= $(CAPI_ROOT_DIR)/$(TEST_DIR)/e2e/config/docker.yaml
-SKIP_RESOURCE_CLEANUP ?= false
-USE_EXISTING_CLUSTER ?= false
-GINKGO_NOCOLOR ?= false
-
-# to set multiple ginkgo skip flags, if any
-ifneq ($(strip $(GINKGO_SKIP)),)
-_SKIP_ARGS := $(foreach arg,$(strip $(GINKGO_SKIP)),-skip="$(arg)")
-endif
-
-# Helper function to get dependency version from go.mod
-get_go_version = $(shell go list -m $1 | awk '{print $$2}')
-
-#
-# Binaries.
-#
-# Note: Need to use abspath so we can invoke these from subdirectories
-KUSTOMIZE_VER := v4.5.2
-KUSTOMIZE_BIN := kustomize
-KUSTOMIZE := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(KUSTOMIZE_BIN)-$(KUSTOMIZE_VER))
-KUSTOMIZE_PKG := sigs.k8s.io/kustomize/kustomize/v4
-
-SETUP_ENVTEST_VER := v0.0.0-20240215143116-d0396a3d6f9f
-SETUP_ENVTEST_BIN := setup-envtest
-SETUP_ENVTEST := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(SETUP_ENVTEST_BIN)-$(SETUP_ENVTEST_VER))
-SETUP_ENVTEST_PKG := sigs.k8s.io/controller-runtime/tools/setup-envtest
-
-CONTROLLER_GEN_VER := v0.14.0
-CONTROLLER_GEN_BIN := controller-gen
-CONTROLLER_GEN := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(CONTROLLER_GEN_BIN)-$(CONTROLLER_GEN_VER))
-CONTROLLER_GEN_PKG := sigs.k8s.io/controller-tools/cmd/controller-gen
-
-GINKGO_BIN := ginkgo
-GINKGO_VER := $(call get_go_version,github.com/onsi/ginkgo/v2)
-GINKGO := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GINKGO_BIN)-$(GINKGO_VER))
-GINKGO_PKG := github.com/onsi/ginkgo/v2/ginkgo
-
-GOLANGCI_LINT_BIN := golangci-lint
-GOLANGCI_LINT_VER := $(shell cat cluster-api/.github/workflows/pr-golangci-lint.yaml | grep [[:space:]]version: | sed 's/.*version: //')
-GOLANGCI_LINT := $(abspath $(CAPI_TOOLS_BIN_DIR)/$(GOLANGCI_LINT_BIN)-$(GOLANGCI_LINT_VER))
-GOLANGCI_LINT_PKG := github.com/golangci/golangci-lint/cmd/golangci-lint
-
-##@ Cluster API: Makefile: Testing
-
-ARTIFACTS ?= ${ROOT_DIR}/_artifacts
-CAPI_ARTIFACTS ?= ${CAPI_ROOT_DIR}/_artifacts
-
-##@ .PHONY
-
 .PHONY: all
 all: build
 
@@ -147,12 +45,12 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: manifests
-manifests: $(CONTROLLER_GEN_BIN) ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="{./api/..., ./cmd/..., ./internal/..., ./stub/...}" output:crd:artifacts:config=config/crd/bases
+manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
-generate: $(CONTROLLER_GEN_BIN) ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="{./api/..., ./cmd/..., ./internal/..., ./stub/...}"
+generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
@@ -166,12 +64,17 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
+# Utilize Kind or modify the e2e tests to load the image locally, enabling compatibility with other vendors.
+.PHONY: test-e2e  # Run the e2e tests against a Kind k8s instance that is spun up.
+test-e2e:
+	go test ./test/e2e/ -v -ginkgo.v
+
 .PHONY: lint
-lint: $(GOLANGCI_LINT_BIN) ## Run golangci-lint linter & yamllint
+lint: golangci-lint ## Run golangci-lint linter & yamllint
 	$(GOLANGCI_LINT) run
 
 .PHONY: lint-fix
-lint-fix: $(GOLANGCI_LINT_BIN) ## Run golangci-lint linter and perform fixes
+lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
 	$(GOLANGCI_LINT) run --fix
 
 ##@ Build
@@ -247,61 +150,66 @@ undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.
 
 ##@ Cluster API
 
+GINKGO_FOCUS ?=
+
 .PHONY: capi-docker-build-e2e
 capi-docker-build-e2e:
 	$(MAKE) -C cluster-api docker-build-e2e
 
-.PHONY: generate-e2e-templates
-generate-e2e-templates: capi-generate-e2e-templates
+.PHONY: capi-test-e2e
+capi-test-e2e:
+	$(MAKE) -C cluster-api GINKGO_FOCUS="$(GINKGO_FOCUS)" test-e2e
 
-.PHONY: capi-generate-e2e-templates
-capi-generate-e2e-templates:
-	$(MAKE) -C cluster-api generate-e2e-templates
+##@ Dependencies
 
-.PHONY: test-e2e
-test-e2e: $(GINKGO_BIN) generate-e2e-templates ## Run the end-to-end tests
-	CNI="../../cluster-api/test/e2e/data/cni/kindnet/kindnet.yaml" \
-	KUBETEST_CONFIGURATION="../../cluster-api/test/e2e/data/kubetest/conformance.yaml" \
-	AUTOSCALER_WORKLOAD="../../cluster-api/test/e2e/data/autoscaler/autoscaler-to-workload-workload.yaml" \
-	$(GINKGO) -v --trace -poll-progress-after=$(GINKGO_POLL_PROGRESS_AFTER) \
-		-poll-progress-interval=$(GINKGO_POLL_PROGRESS_INTERVAL) --tags=e2e --focus="$(GINKGO_FOCUS)" \
-		$(_SKIP_ARGS) --nodes=$(GINKGO_NODES) --timeout=$(GINKGO_TIMEOUT) --no-color=$(GINKGO_NOCOLOR) \
-		--output-dir="$(ARTIFACTS)" --junit-report="junit.e2e_suite.1.xml" $(GINKGO_ARGS) $(ROOT_DIR)/$(TEST_DIR)/e2e -- \
-	    -e2e.artifacts-folder="$(CAPI_ARTIFACTS)" \
-	    -e2e.config="$(E2E_CONF_FILE)" \
-	    -e2e.skip-resource-cleanup=$(SKIP_RESOURCE_CLEANUP) -e2e.use-existing-cluster=$(USE_EXISTING_CLUSTER)
+## Location to install dependencies to
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
 
-.PHONY: $(CONTROLLER_GEN_BIN)
-controller-gen: capi-$(CONTROLLER_GEN_BIN) ## Build controller-gen from tools folder.
+## Tool Binaries
+KUBECTL ?= kubectl
+KUSTOMIZE ?= $(LOCALBIN)/kustomize-$(KUSTOMIZE_VERSION)
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
+ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
+GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
 
-.PHONY: capi-$(CONTROLLER_GEN_BIN)
-capi-$(CONTROLLER_GEN_BIN):
-	$(MAKE) -C cluster-api $(CONTROLLER_GEN_BIN)
+## Tool Versions
+KUSTOMIZE_VERSION ?= v5.3.0
+CONTROLLER_TOOLS_VERSION ?= v0.14.0
+ENVTEST_VERSION ?= latest
+GOLANGCI_LINT_VERSION ?= v1.54.2
 
-.PHONY: $(KUSTOMIZE_BIN)
-kustomize: capi-$(KUSTOMIZE_BIN) ## Build kustomize from tools folder.
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
+$(KUSTOMIZE): $(LOCALBIN)
+	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
 
-.PHONY: capi-$(KUSTOMIZE_BIN)
-capi-$(KUSTOMIZE_BIN):
-	$(MAKE) -C cluster-api $(KUSTOMIZE_BIN)
+.PHONY: controller-gen
+controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
+$(CONTROLLER_GEN): $(LOCALBIN)
+	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
 
-.PHONY: $(SETUP_ENVTEST_BIN)
-setup-envtest: capi-$(SETUP_ENVTEST_BIN) ## Build setup-envtest from tools folder.
+.PHONY: envtest
+envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
+$(ENVTEST): $(LOCALBIN)
+	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
 
-.PHONY: capi-$(SETUP_ENVTEST_BIN)
-capi-$(SETUP_ENVTEST_BIN):
-	$(MAKE) -C cluster-api $(SETUP_ENVTEST_BIN)
+.PHONY: golangci-lint
+golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
+$(GOLANGCI_LINT): $(LOCALBIN)
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,${GOLANGCI_LINT_VERSION})
 
-.PHONY: $(GINKGO_BIN)
-ginkgo: capi-$(GINKGO_BIN) ## Build ginkgo from tools folder.
-
-.PHONY: capi-$(GINKGO_BIN)
-capi-$(GINKGO_BIN):
-	$(MAKE) -C cluster-api $(GINKGO_BIN)
-
-.PHONY: $(GOLANGCI_LINT_BIN)
-golangci-lint: capi-$(GOLANGCI_LINT_BIN) ## Build golangci-lint from tools folder.
-
-.PHONY: capi-$(GOLANGCI_LINT_BIN)
-capi-$(GOLANGCI_LINT_BIN):
-	$(MAKE) -C cluster-api $(GOLANGCI_LINT_BIN)
+# go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
+# $1 - target path with name of binary (ideally with version)
+# $2 - package url which can be installed
+# $3 - specific version of package
+define go-install-tool
+@[ -f $(1) ] || { \
+set -e; \
+package=$(2)@$(3) ;\
+echo "Downloading $${package}" ;\
+GOBIN=$(LOCALBIN) go install $${package} ;\
+mv "$$(echo "$(1)" | sed "s/-$(3)$$//")" $(1) ;\
+}
+endef
