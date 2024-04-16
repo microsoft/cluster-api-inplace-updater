@@ -1,3 +1,0 @@
-[submodule "cluster-api"]
-	path = cluster-api
-	url = https://github.com/kubernetes-sigs/cluster-api.git
