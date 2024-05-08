@@ -5,7 +5,7 @@
 *.dll
 *.so
 *.dylib
-bin
+bin/*
 Dockerfile.cross
 
 # Test binary, built with `go test -c`
@@ -27,7 +27,5 @@ go.work
 *.swo
 *~
 
-# test results
-_artifacts
-
 **/__*
+_artifacts/**

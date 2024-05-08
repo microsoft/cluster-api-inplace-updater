@@ -1,1 +1,3 @@
-*.xml
+*.exe
+*.dll
+**/_artifacts
