@@ -23,23 +23,22 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-var _ = Describe("When upgrading a workload cluster using ClusterClass with RuntimeSDK [ClusterClass]", func() {
-	clusterUpgradeWithRuntimeSDKSpec(ctx, func() clusterUpgradeWithRuntimeSDKSpecInput {
+var _ = Describe("When upgrading a workload cluster by in-place upgrader", func() {
+	clusterInPlaceUpgradeSpec(ctx, func() clusterInPlaceUpgradeSpecInput {
 		version, err := semver.ParseTolerant(e2eConfig.GetVariable(KubernetesVersionUpgradeFrom))
 		Expect(err).ToNot(HaveOccurred(), "Invalid argument, KUBERNETES_VERSION_UPGRADE_FROM is not a valid version")
 		if version.LT(semver.MustParse("1.24.0")) {
 			Fail("This test only supports upgrades from Kubernetes >= v1.24.0")
 		}
 
-		return clusterUpgradeWithRuntimeSDKSpecInput{
+		return clusterInPlaceUpgradeSpecInput{
 			E2EConfig:              e2eConfig,
 			ClusterctlConfigPath:   clusterctlConfigPath,
 			BootstrapClusterProxy:  bootstrapClusterProxy,
 			ArtifactFolder:         artifactFolder,
 			SkipCleanup:            skipCleanup,
 			InfrastructureProvider: pointer.String("docker"),
-			// "upgrades" is the same as the "topology" flavor but with an additional MachinePool.
-			Flavor: pointer.String("upgrades-runtimesdk"),
+			Flavor:                 pointer.String("topology"),
 		}
 	})
 })

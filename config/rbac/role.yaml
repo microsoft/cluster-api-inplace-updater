@@ -17,6 +17,16 @@ rules:
   verbs:
   - create
 - apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - watch
+- apiGroups:
   - upgrade.extension.cluster.x-k8s.io
   resources:
   - upgradetasks
