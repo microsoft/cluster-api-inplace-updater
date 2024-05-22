@@ -268,6 +268,15 @@ func setupLifecycleHookHandlers(mgr ctrl.Manager, runtimeExtensionWebhookServer 
 	lifecycleExtensionHandlers := lifecycle.NewExtensionHandlers(mgr.GetClient())
 
 	if err := runtimeExtensionWebhookServer.AddExtensionHandler(server.ExtensionHandler{
+		Hook:        runtimehooksv1.BeforeClusterCreate,
+		Name:        "before-cluster-create",
+		HandlerFunc: lifecycleExtensionHandlers.DoBeforeClusterCreate,
+	}); err != nil {
+		setupLog.Error(err, "error adding handler")
+		os.Exit(1)
+	}
+
+	if err := runtimeExtensionWebhookServer.AddExtensionHandler(server.ExtensionHandler{
 		Hook:        runtimehooksv1.BeforeClusterUpgrade,
 		Name:        "before-cluster-upgrade",
 		HandlerFunc: lifecycleExtensionHandlers.DoBeforeClusterUpgrade,

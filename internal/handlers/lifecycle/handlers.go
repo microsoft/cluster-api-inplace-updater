@@ -19,11 +19,10 @@ package lifecycle
 import (
 	"context"
 
+	"github.com/microsoft/cluster-api-inplace-upgrader/stub"
 	runtimehooksv1 "sigs.k8s.io/cluster-api/exp/runtime/hooks/api/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/microsoft/cluster-api-inplace-upgrader/stub"
 )
 
 type ExtensionHandlers struct {
@@ -62,4 +61,9 @@ func (m *ExtensionHandlers) DoAfterControlPlaneUpgrade(ctx context.Context, requ
 func (m *ExtensionHandlers) DoAfterClusterUpgrade(ctx context.Context, request *runtimehooksv1.AfterClusterUpgradeRequest, response *runtimehooksv1.AfterClusterUpgradeResponse) {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("AfterClusterUpgrade is called")
+}
+
+func (m *ExtensionHandlers) DoBeforeClusterCreate(ctx context.Context, request *runtimehooksv1.BeforeClusterCreateRequest, response *runtimehooksv1.BeforeClusterCreateResponse) {
+	log := ctrl.LoggerFrom(ctx)
+	log.Info("BeforeClusterCreate is called")
 }

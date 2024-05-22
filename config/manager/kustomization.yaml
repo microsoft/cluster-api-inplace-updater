@@ -8,4 +8,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: caparc.azurecr.io/cipu
-  newTag: latest
+  newTag: dev

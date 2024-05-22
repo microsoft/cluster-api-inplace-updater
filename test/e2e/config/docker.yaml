@@ -11,24 +11,8 @@
 
 images:
 # Use local dev images built source tree;
-- name: gcr.io/k8s-staging-cluster-api/cluster-api-controller-{ARCH}:dev
-  loadBehavior: tryLoad
-- name: gcr.io/k8s-staging-cluster-api/kubeadm-bootstrap-controller-{ARCH}:dev
-  loadBehavior: tryLoad
-- name: gcr.io/k8s-staging-cluster-api/kubeadm-control-plane-controller-{ARCH}:dev
-  loadBehavior: tryLoad
-- name: gcr.io/k8s-staging-cluster-api/capd-manager-{ARCH}:dev
-  loadBehavior: tryLoad
-- name: gcr.io/k8s-staging-cluster-api/capim-manager-{ARCH}:dev
-  loadBehavior: tryLoad
-- name: gcr.io/k8s-staging-cluster-api/test-extension-{ARCH}:dev
-  loadBehavior: tryLoad
-- name: quay.io/jetstack/cert-manager-cainjector:v1.14.2
-  loadBehavior: tryLoad
-- name: quay.io/jetstack/cert-manager-webhook:v1.14.2
-  loadBehavior: tryLoad
-- name: quay.io/jetstack/cert-manager-controller:v1.14.2
-  loadBehavior: tryLoad
+- name: caparc.azurecr.io/cipu:dev
+  loadBehavior: mustLoad
 
 providers:
 
@@ -87,6 +71,14 @@ providers:
     - sourcePath: "../data/infrastructure-docker/v1.5/cluster-template-topology.yaml"
     - sourcePath: "../data/infrastructure-docker/v1.5/clusterclass-quick-start.yaml"
 
+- name: cluster-inplace-upgrader
+  type: RuntimeExtensionProvider
+  versions:
+    - name: v1.5.0 # next; use manifest from source files
+      value: ../../../config/default
+      files:
+      - sourcePath: "../data/shared/v1.5/metadata.yaml"
+
 variables:
   # Default variables for the e2e test; those values could be overridden via env variables, thus
   # allowing the same e2e config file to be re-used in different Prow jobs e.g. each one with a K8s version permutation.
@@ -94,8 +86,8 @@ variables:
   # This avoids building node images in the default case which improves the test duration significantly.
   KUBERNETES_VERSION_MANAGEMENT: "v1.29.0"
   KUBERNETES_VERSION: "v1.29.0"
-  KUBERNETES_VERSION_UPGRADE_FROM: "v1.28.0"
-  KUBERNETES_VERSION_UPGRADE_TO: "v1.29.0"
+  KUBERNETES_VERSION_UPGRADE_FROM: "v1.29.0"
+  KUBERNETES_VERSION_UPGRADE_TO: "v1.29.1"
   ETCD_VERSION_UPGRADE_TO: "3.5.10-0"
   COREDNS_VERSION_UPGRADE_TO: "v1.11.1"
   DOCKER_SERVICE_DOMAIN: "cluster.local"

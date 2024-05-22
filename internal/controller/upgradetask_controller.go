@@ -36,6 +36,7 @@ type UpgradeTaskReconciler struct {
 //+kubebuilder:rbac:groups=upgrade.extension.cluster.x-k8s.io,resources=upgradetasks,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=upgrade.extension.cluster.x-k8s.io,resources=upgradetasks/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=upgrade.extension.cluster.x-k8s.io,resources=upgradetasks/finalizers,verbs=update
+//+kubebuilder:rbac:groups=core,resources=configmaps,verbs=create;get;list;watch;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
