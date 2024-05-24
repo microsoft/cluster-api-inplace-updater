@@ -2,21 +2,21 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/upgrade.extension.cluster.x-k8s.io_upgradetasks.yaml
-- bases/upgrade.extension.cluster.x-k8s.io_upgradepolicies.yaml
+- bases/update.extension.cluster.x-k8s.io_updatetasks.yaml
+- bases/update.extension.cluster.x-k8s.io_updatepolicies.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
-#- path: patches/webhook_in_upgradetasks.yaml
-#- path: patches/webhook_in_upgradepolicies.yaml
+#- path: patches/webhook_in_updatetasks.yaml
+#- path: patches/webhook_in_updatepolicies.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
-#- path: patches/cainjection_in_upgradetasks.yaml
-#- path: patches/cainjection_in_upgradepolicies.yaml
+#- path: patches/cainjection_in_updatetasks.yaml
+#- path: patches/cainjection_in_updatepolicies.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [WEBHOOK] To enable webhook, uncomment the following section

@@ -1,27 +1,31 @@
-# permissions for end users to view upgradetasks.
+# permissions for end users to edit updatepolicies.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: upgradetask-viewer-role
+    app.kubernetes.io/instance: updatepolicy-editor-role
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: cluster-api-inplace-updater
     app.kubernetes.io/part-of: cluster-api-inplace-updater
     app.kubernetes.io/managed-by: kustomize
-  name: upgradetask-viewer-role
+  name: updatepolicy-editor-role
 rules:
 - apiGroups:
-  - upgrade.extension.cluster.x-k8s.io
+  - update.extension.cluster.x-k8s.io
   resources:
-  - upgradetasks
+  - updatepolicies
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
-  - upgrade.extension.cluster.x-k8s.io
+  - update.extension.cluster.x-k8s.io
   resources:
-  - upgradetasks/status
+  - updatepolicies/status
   verbs:
   - get

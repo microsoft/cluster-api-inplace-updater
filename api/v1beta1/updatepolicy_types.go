@@ -21,13 +21,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// UpgradePolicySpec defines the desired state of UpgradePolicy
-type UpgradePolicySpec struct {
-	NodeUpgradeTemplateRef *corev1.ObjectReference `json:"nodeUpgradeTemplateRef"`
+// UpdatePolicySpec defines the desired state of UpdatePolicy
+type UpdatePolicySpec struct {
+	NodeUpdateTemplateRef *corev1.ObjectReference `json:"nodeUpdateTemplateRef"`
 }
 
-// UpgradePolicyStatus defines the observed state of UpgradePolicy
-type UpgradePolicyStatus struct {
+// UpdatePolicyStatus defines the observed state of UpdatePolicy
+type UpdatePolicyStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
@@ -35,24 +35,24 @@ type UpgradePolicyStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// UpgradePolicy is the Schema for the upgradepolicies API
-type UpgradePolicy struct {
+// UpdatePolicy is the Schema for the updatepolicies API
+type UpdatePolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   UpgradePolicySpec   `json:"spec,omitempty"`
-	Status UpgradePolicyStatus `json:"status,omitempty"`
+	Spec   UpdatePolicySpec   `json:"spec,omitempty"`
+	Status UpdatePolicyStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// UpgradePolicyList contains a list of UpgradePolicy
-type UpgradePolicyList struct {
+// UpdatePolicyList contains a list of UpdatePolicy
+type UpdatePolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []UpgradePolicy `json:"items"`
+	Items           []UpdatePolicy `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&UpgradePolicy{}, &UpgradePolicyList{})
+	SchemeBuilder.Register(&UpdatePolicy{}, &UpdatePolicyList{})
 }

@@ -16,11 +16,11 @@ limitations under the License.
 
 package v1beta1
 
-type UpgradeTaskPhase string
+type UpdateTaskPhase string
 
 const (
-	UpgradeTaskPhaseUpgrading UpgradeTaskPhase = "Upgrading"
-	UpgradeTaskPhaseUpgraded  UpgradeTaskPhase = "Upgraded"
-	UpgradeTaskPhaseAborting  UpgradeTaskPhase = "Aborting"
-	UpgradeTaskPhaseAborted   UpgradeTaskPhase = "Aborted"
+	UpdateTaskPhaseUpgrading UpdateTaskPhase = "Upgrading"
+	UpdateTaskPhaseUpdated   UpdateTaskPhase = "Updated"
+	UpdateTaskPhaseAborting  UpdateTaskPhase = "Aborting"
+	UpdateTaskPhaseAborted   UpdateTaskPhase = "Aborted"
 )

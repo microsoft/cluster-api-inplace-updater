@@ -1,20 +1,20 @@
-# permissions for end users to edit upgradetasks.
+# permissions for end users to edit updatetasks.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: upgradetask-editor-role
+    app.kubernetes.io/instance: updatetask-editor-role
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: cluster-api-inplace-updater
     app.kubernetes.io/part-of: cluster-api-inplace-updater
     app.kubernetes.io/managed-by: kustomize
-  name: upgradetask-editor-role
+  name: updatetask-editor-role
 rules:
 - apiGroups:
-  - upgrade.extension.cluster.x-k8s.io
+  - update.extension.cluster.x-k8s.io
   resources:
-  - upgradetasks
+  - updatetasks
   verbs:
   - create
   - delete
@@ -24,8 +24,8 @@ rules:
   - update
   - watch
 - apiGroups:
-  - upgrade.extension.cluster.x-k8s.io
+  - update.extension.cluster.x-k8s.io
   resources:
-  - upgradetasks/status
+  - updatetasks/status
   verbs:
   - get

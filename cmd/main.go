@@ -48,7 +48,7 @@ import (
 	"sigs.k8s.io/cluster-api/util/flags"
 	"sigs.k8s.io/cluster-api/version"
 
-	upgradev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
+	updatev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
 	"github.com/microsoft/cluster-api-inplace-updater/internal/controller"
 	"github.com/microsoft/cluster-api-inplace-updater/internal/handlers/lifecycle"
 	//+kubebuilder:scaffold:imports
@@ -94,7 +94,7 @@ func init() {
 	_ = bootstrapv1.AddToScheme(scheme)
 	_ = controlplanev1.AddToScheme(scheme)
 
-	utilruntime.Must(upgradev1beta1.AddToScheme(scheme))
+	utilruntime.Must(updatev1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 
 	// Register the RuntimeHook types into the catalog.
@@ -317,7 +317,7 @@ func setupChecks(mgr ctrl.Manager) {
 }
 
 func setupReconcilers(mgr ctrl.Manager) {
-	if err := (&controller.UpgradeTaskReconciler{
+	if err := (&controller.UpdateTaskReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
