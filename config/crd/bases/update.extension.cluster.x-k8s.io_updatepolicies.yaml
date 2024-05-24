@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: upgradepolicies.upgrade.extension.cluster.x-k8s.io
+  name: updatepolicies.update.extension.cluster.x-k8s.io
 spec:
-  group: upgrade.extension.cluster.x-k8s.io
+  group: update.extension.cluster.x-k8s.io
   names:
-    kind: UpgradePolicy
-    listKind: UpgradePolicyList
-    plural: upgradepolicies
-    singular: upgradepolicy
+    kind: UpdatePolicy
+    listKind: UpdatePolicyList
+    plural: updatepolicies
+    singular: updatepolicy
   scope: Namespaced
   versions:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: UpgradePolicy is the Schema for the upgradepolicies API
+        description: UpdatePolicy is the Schema for the updatepolicies API
         properties:
           apiVersion:
             description: |-
@@ -37,9 +37,9 @@ spec:
           metadata:
             type: object
           spec:
-            description: UpgradePolicySpec defines the desired state of UpgradePolicy
+            description: UpdatePolicySpec defines the desired state of UpdatePolicy
             properties:
-              nodeUpgradeTemplateRef:
+              nodeUpdateTemplateRef:
                 description: |-
                   ObjectReference contains enough information to let you inspect or modify the referred object.
                   ---
@@ -101,10 +101,10 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
             required:
-            - nodeUpgradeTemplateRef
+            - nodeUpdateTemplateRef
             type: object
           status:
-            description: UpgradePolicyStatus defines the observed state of UpgradePolicy
+            description: UpdatePolicyStatus defines the observed state of UpdatePolicy
             type: object
         type: object
     served: true

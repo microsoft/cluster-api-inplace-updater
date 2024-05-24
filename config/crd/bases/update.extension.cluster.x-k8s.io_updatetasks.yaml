@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: upgradetasks.upgrade.extension.cluster.x-k8s.io
+  name: updatetasks.update.extension.cluster.x-k8s.io
 spec:
-  group: upgrade.extension.cluster.x-k8s.io
+  group: update.extension.cluster.x-k8s.io
   names:
-    kind: UpgradeTask
-    listKind: UpgradeTaskList
-    plural: upgradetasks
-    singular: upgradetask
+    kind: UpdateTask
+    listKind: UpdateTaskList
+    plural: updatetasks
+    singular: updatetask
   scope: Namespaced
   versions:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: UpgradeTask is the Schema for the upgradetasks API
+        description: UpdateTask is the Schema for the updatetasks API
         properties:
           apiVersion:
             description: |-
@@ -37,7 +37,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: UpgradeTaskSpec defines the desired state of UpgradeTask
+            description: UpdateTaskSpec defines the desired state of UpdateTask
             properties:
               clusterRef:
                 description: |-
@@ -222,7 +222,7 @@ spec:
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
-              machinesRequireUpgrade:
+              machinesRequireUpdate:
                 items:
                   description: |-
                     ObjectReference contains enough information to let you inspect or modify the referred object.
@@ -719,7 +719,7 @@ spec:
                 type: string
             type: object
           status:
-            description: UpgradeTaskStatus defines the observed state of UpgradeTask
+            description: UpdateTaskStatus defines the observed state of UpdateTask
             properties:
               phase:
                 type: string

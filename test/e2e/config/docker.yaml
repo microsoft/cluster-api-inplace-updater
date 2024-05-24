@@ -71,7 +71,7 @@ providers:
     - sourcePath: "../data/infrastructure-docker/v1.5/cluster-template-topology.yaml"
     - sourcePath: "../data/infrastructure-docker/v1.5/clusterclass-quick-start.yaml"
 
-- name: cluster-inplace-upgrader
+- name: cluster-inplace-updater
   type: RuntimeExtensionProvider
   versions:
     - name: v1.5.0 # next; use manifest from source files

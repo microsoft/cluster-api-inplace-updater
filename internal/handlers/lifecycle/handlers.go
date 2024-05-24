@@ -19,7 +19,7 @@ package lifecycle
 import (
 	"context"
 
-	"github.com/microsoft/cluster-api-inplace-upgrader/stub"
+	updatev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
 	runtimehooksv1 "sigs.k8s.io/cluster-api/exp/runtime/hooks/api/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,17 +35,17 @@ func NewExtensionHandlers(client client.Client) *ExtensionHandlers {
 	}
 }
 
-func (m *ExtensionHandlers) DoControlPlaneExternalUpgrade(ctx context.Context, request *stub.ControlPlaneExternalUpgradeRequest, response *stub.ControlPlaneExternalUpgradeResponse) {
+func (m *ExtensionHandlers) DoControlPlaneExternalUpdate(ctx context.Context, request *updatev1beta1.ControlPlaneExternalUpdateRequest, response *updatev1beta1.ControlPlaneExternalUpdateResponse) {
 	log := ctrl.LoggerFrom(ctx)
-	log.Info("ControlPlaneExternalUpgrade is called")
+	log.Info("ControlPlaneExternalUpdate is called")
 }
 
-func (m *ExtensionHandlers) DoMachineDeploymentExternalUpgrade(ctx context.Context, request *stub.MachineDeploymentExternalUpgradeRequest, response *stub.MachineDeploymentExternalUpgradeResponse) {
+func (m *ExtensionHandlers) DoMachineDeploymentExternalUpdate(ctx context.Context, request *updatev1beta1.MachineDeploymentExternalUpdateRequest, response *updatev1beta1.MachineDeploymentExternalUpdateResponse) {
 	log := ctrl.LoggerFrom(ctx)
-	log.Info("DoMachineDeploymentExternalUpgrade is called")
+	log.Info("DoMachineDeploymentExternalUpdate is called")
 }
 
-// DoBeforeClusterUpgrade implements the HandlerFunc for the BeforeClusterUpgrade hook.
+// DoBeforeClusterUpdate implements the HandlerFunc for the BeforeClusterUpdate hook.
 func (m *ExtensionHandlers) DoBeforeClusterUpgrade(ctx context.Context, request *runtimehooksv1.BeforeClusterUpgradeRequest, response *runtimehooksv1.BeforeClusterUpgradeResponse) {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("BeforeClusterUpgrade is called")

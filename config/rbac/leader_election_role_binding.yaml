@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/name: rolebinding
     app.kubernetes.io/instance: leader-election-rolebinding
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: cluster-api-inplace-upgrader
-    app.kubernetes.io/part-of: cluster-api-inplace-upgrader
+    app.kubernetes.io/created-by: cluster-api-inplace-updater
+    app.kubernetes.io/part-of: cluster-api-inplace-updater
     app.kubernetes.io/managed-by: kustomize
   name: leader-election-rolebinding
 roleRef:

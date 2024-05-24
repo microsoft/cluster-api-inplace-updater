@@ -1,0 +1,27 @@
+# permissions for end users to view updatepolicies.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: updatepolicy-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: cluster-api-inplace-updater
+    app.kubernetes.io/part-of: cluster-api-inplace-updater
+    app.kubernetes.io/managed-by: kustomize
+  name: updatepolicy-viewer-role
+rules:
+- apiGroups:
+  - update.extension.cluster.x-k8s.io
+  resources:
+  - updatepolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - update.extension.cluster.x-k8s.io
+  resources:
+  - updatepolicies/status
+  verbs:
+  - get

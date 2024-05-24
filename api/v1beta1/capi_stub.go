@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package stub
+package v1beta1
 
 import (
 	corev1 "k8s.io/api/core/v1"
@@ -31,47 +31,47 @@ type MachineSpec struct {
 	InfraMachine    *unstructured.Unstructured `json:"infraMachine,omitempty"`
 }
 
-func ControlPlaneExternalUpgrade(*ControlPlaneExternalUpgradeRequest, *ControlPlaneExternalUpgradeResponse) {
+func ControlPlaneExternalUpdate(*ControlPlaneExternalUpdateRequest, *ControlPlaneExternalUpdateResponse) {
 }
 
-func MachineDeploymentExternalUpgrade(*MachineDeploymentExternalUpgradeRequest, *MachineDeploymentExternalUpgradeResponse) {
+func MachineDeploymentExternalUpdate(*MachineDeploymentExternalUpdateRequest, *MachineDeploymentExternalUpdateResponse) {
 }
 
-// ControlPlaneExternalUpgradeRequest is the input to an external upgrade
+// ControlPlaneExternalUpdateRequest is the input to an external update
 // strategy implementer for a CP.
-type ControlPlaneExternalUpgradeRequest struct {
+type ControlPlaneExternalUpdateRequest struct {
 	metav1.TypeMeta `json:",inline"`
 	// CommonRequest contains fields common to all request types.
 	runtimehooksv1.CommonRequest `json:",inline"`
 	ClusterRef                   *corev1.ObjectReference  `json:"clusterRef,omitempty"`
 	ControlPlaneRef              *corev1.ObjectReference  `json:"controlPlaneRef,omitempty"`
-	MachinesRequireUpgrade       []corev1.ObjectReference `json:"machinesRequireUpgrade,omitempty"`
+	MachinesRequireUpdate        []corev1.ObjectReference `json:"machinesRequireUpdate,omitempty"`
 	NewMachine                   MachineSpec              `json:"newMachine,omitempty"`
 }
 
-// ControlPlaneExternalUpgradeResponse is the response from an external
-// upgrade strategy implementer.
-type ControlPlaneExternalUpgradeResponse struct {
+// ControlPlaneExternalUpdateResponse is the response from an external
+// update strategy implementer.
+type ControlPlaneExternalUpdateResponse struct {
 	metav1.TypeMeta `json:",inline"`
 	// CommonRetryResponse contains Status, Message and RetryAfterSeconds fields.
 	runtimehooksv1.CommonRetryResponse `json:",inline"`
 }
 
-// MachineDeploymentExternalUpgradeRequest is the input to an external upgrade
+// MachineDeploymentExternalUpdateRequest is the input to an external update
 // strategy implementer for a groups of machines.
-type MachineDeploymentExternalUpgradeRequest struct {
+type MachineDeploymentExternalUpdateRequest struct {
 	metav1.TypeMeta `json:",inline"`
 	// CommonRequest contains fields common to all request types.
 	runtimehooksv1.CommonRequest `json:",inline"`
 	ClusterRef                   *corev1.ObjectReference  `json:"clusterRef,omitempty"`
 	MachineDeploymentRef         *corev1.ObjectReference  `json:"machineDeploymentRef,omitempty"`
-	MachinesRequireUpgrade       []corev1.ObjectReference `json:"machinesRequireUpgrade,omitempty"`
+	MachinesRequireUpdate        []corev1.ObjectReference `json:"machinesRequireUpdate,omitempty"`
 	NewMachine                   MachineSpec              `json:"newMachine,omitempty"`
 }
 
-// MachineDeploymentExternalUpgradeResponse is the response from an external
-// upgrade strategy implementer.
-type MachineDeploymentExternalUpgradeResponse struct {
+// MachineDeploymentExternalUpdateResponse is the response from an external
+// update strategy implementer.
+type MachineDeploymentExternalUpdateResponse struct {
 	metav1.TypeMeta `json:",inline"`
 	// CommonRetryResponse contains Status, Message and RetryAfterSeconds fields.
 	runtimehooksv1.CommonRetryResponse `json:",inline"`

@@ -23,7 +23,7 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-var _ = Describe("When upgrading a workload cluster by in-place upgrader", func() {
+var _ = Describe("When upgrading a workload cluster by in-place updater", func() {
 	clusterInPlaceUpgradeSpec(ctx, func() clusterInPlaceUpgradeSpecInput {
 		version, err := semver.ParseTolerant(e2eConfig.GetVariable(KubernetesVersionUpgradeFrom))
 		Expect(err).ToNot(HaveOccurred(), "Invalid argument, KUBERNETES_VERSION_UPGRADE_FROM is not a valid version")
