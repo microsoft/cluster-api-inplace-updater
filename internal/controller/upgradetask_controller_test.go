@@ -27,7 +27,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	upgradev1beta1 "github.com/microsoft/cluster-api-inplace-upgrader/api/v1beta1"
+	upgradev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
 )
 
 var _ = Describe("UpgradeTask Controller", func() {

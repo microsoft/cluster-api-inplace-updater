@@ -6,8 +6,8 @@ metadata:
     app.kubernetes.io/name: clusterrole
     app.kubernetes.io/instance: upgradetask-editor-role
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: cluster-api-inplace-upgrader
-    app.kubernetes.io/part-of: cluster-api-inplace-upgrader
+    app.kubernetes.io/created-by: cluster-api-inplace-updater
+    app.kubernetes.io/part-of: cluster-api-inplace-updater
     app.kubernetes.io/managed-by: kustomize
   name: upgradetask-editor-role
 rules:

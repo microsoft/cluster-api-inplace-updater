@@ -117,7 +117,7 @@ func clusterInPlaceUpgradeSpec(ctx context.Context, inputGetter func() clusterIn
 	})
 
 	It("Should create, upgrade and delete a workload cluster", func() {
-		// NOTE: cluster-inplace-upgrader extension is already deployed in the management cluster. If for any reason in future we want
+		// NOTE: cluster-inplace-updater extension is already deployed in the management cluster. If for any reason in future we want
 		// to make this test more self-contained this test should be modified in order to create an additional
 		// management cluster; also the E2E test configuration should be modified introducing something like
 		// optional:true allowing to define which providers should not be installed by default in
@@ -218,15 +218,15 @@ func extensionConfig(name, namespace string) *runtimev1.ExtensionConfig {
 			Name: name,
 			Annotations: map[string]string{
 				// Note: this assumes the test extension get deployed in the default namespace defined in its own runtime-extensions-components.yaml
-				runtimev1.InjectCAFromSecretAnnotation: "capi-inplace-upgrader-system/capi-inplace-upgrader-webhook-service-cert",
+				runtimev1.InjectCAFromSecretAnnotation: "capi-inplace-updater-system/capi-inplace-updater-webhook-service-cert",
 			},
 		},
 		Spec: runtimev1.ExtensionConfigSpec{
 			ClientConfig: runtimev1.ClientConfig{
 				Service: &runtimev1.ServiceReference{
-					Name: "capi-inplace-upgrader-webhook-service",
+					Name: "capi-inplace-updater-webhook-service",
 					// Note: this assumes the test extension get deployed in the default namespace defined in its own runtime-extensions-components.yaml
-					Namespace: "capi-inplace-upgrader-system",
+					Namespace: "capi-inplace-updater-system",
 				},
 			},
 			NamespaceSelector: &metav1.LabelSelector{

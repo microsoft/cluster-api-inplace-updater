@@ -4,9 +4,9 @@ metadata:
   labels:
     app.kubernetes.io/name: upgradepolicy
     app.kubernetes.io/instance: upgradepolicy-sample
-    app.kubernetes.io/part-of: cluster-api-inplace-upgrader
+    app.kubernetes.io/part-of: cluster-api-inplace-updater
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: cluster-api-inplace-upgrader
+    app.kubernetes.io/created-by: cluster-api-inplace-updater
   name: upgradepolicy-sample
 spec:
   # TODO(user): Add fields here

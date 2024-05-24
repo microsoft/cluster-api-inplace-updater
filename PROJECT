@@ -5,8 +5,8 @@
 domain: extension.cluster.x-k8s.io
 layout:
 - go.kubebuilder.io/v4
-projectName: cluster-api-inplace-upgrader
-repo: github.com/microsoft/cluster-api-inplace-upgrader
+projectName: cluster-api-inplace-updater
+repo: github.com/microsoft/cluster-api-inplace-updater
 resources:
 - api:
     crdVersion: v1
@@ -15,7 +15,7 @@ resources:
   domain: extension.cluster.x-k8s.io
   group: upgrade
   kind: UpgradeTask
-  path: github.com/microsoft/cluster-api-inplace-upgrader/api/v1beta1
+  path: github.com/microsoft/cluster-api-inplace-updater/api/v1beta1
   version: v1beta1
 - api:
     crdVersion: v1
@@ -23,6 +23,6 @@ resources:
   domain: extension.cluster.x-k8s.io
   group: upgrade
   kind: UpgradePolicy
-  path: github.com/microsoft/cluster-api-inplace-upgrader/api/v1beta1
+  path: github.com/microsoft/cluster-api-inplace-updater/api/v1beta1
   version: v1beta1
 version: "3"

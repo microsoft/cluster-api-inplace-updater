@@ -20,7 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/microsoft/cluster-api-inplace-upgrader/stub"
+	"github.com/microsoft/cluster-api-inplace-updater/stub"
 )
 
 // UpgradeTaskSpec defines the desired state of UpgradeTask

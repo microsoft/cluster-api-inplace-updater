@@ -19,7 +19,7 @@ package lifecycle
 import (
 	"context"
 
-	"github.com/microsoft/cluster-api-inplace-upgrader/stub"
+	"github.com/microsoft/cluster-api-inplace-updater/stub"
 	runtimehooksv1 "sigs.k8s.io/cluster-api/exp/runtime/hooks/api/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"

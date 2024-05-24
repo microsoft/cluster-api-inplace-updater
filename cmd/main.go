@@ -48,9 +48,9 @@ import (
 	"sigs.k8s.io/cluster-api/util/flags"
 	"sigs.k8s.io/cluster-api/version"
 
-	upgradev1beta1 "github.com/microsoft/cluster-api-inplace-upgrader/api/v1beta1"
-	"github.com/microsoft/cluster-api-inplace-upgrader/internal/controller"
-	"github.com/microsoft/cluster-api-inplace-upgrader/internal/handlers/lifecycle"
+	upgradev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
+	"github.com/microsoft/cluster-api-inplace-updater/internal/controller"
+	"github.com/microsoft/cluster-api-inplace-updater/internal/handlers/lifecycle"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -63,7 +63,7 @@ var (
 	// NOTE: it is not mandatory to use controller runtime utilities in custom RuntimeExtension, but it is recommended
 	// because it makes log from those components similar to log from controllers.
 	setupLog       = ctrl.Log.WithName("setup")
-	controllerName = "cluster-api-inplace-upgrader-manager"
+	controllerName = "cluster-api-inplace-updater-manager"
 
 	// catalog contains all information about RuntimeHooks.
 	catalog = runtimecatalog.New()
@@ -214,7 +214,7 @@ func main() {
 	ctrlOptions := ctrl.Options{
 		Scheme:                     scheme,
 		LeaderElection:             enableLeaderElection,
-		LeaderElectionID:           "controller-leader-election-inplace-upgrader-extension",
+		LeaderElectionID:           "controller-leader-election-inplace-updater-extension",
 		LeaseDuration:              &leaderElectionLeaseDuration,
 		RenewDeadline:              &leaderElectionRenewDeadline,
 		RetryPeriod:                &leaderElectionRetryPeriod,
