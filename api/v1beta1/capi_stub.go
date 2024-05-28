@@ -76,3 +76,5 @@ type MachineDeploymentExternalUpdateResponse struct {
 	// CommonRetryResponse contains Status, Message and RetryAfterSeconds fields.
 	runtimehooksv1.CommonRetryResponse `json:",inline"`
 }
+
+const MachineUpToDate clusterv1.ConditionType = "MachineUpToDate"

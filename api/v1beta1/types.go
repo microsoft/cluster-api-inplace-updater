@@ -19,8 +19,22 @@ package v1beta1
 type UpdateTaskPhase string
 
 const (
-	UpdateTaskPhaseUpgrading UpdateTaskPhase = "Upgrading"
-	UpdateTaskPhaseUpdated   UpdateTaskPhase = "Updated"
-	UpdateTaskPhaseAborting  UpdateTaskPhase = "Aborting"
-	UpdateTaskPhaseAborted   UpdateTaskPhase = "Aborted"
+	UpdateTaskAnnotationName = "update.extension.cluster.x-k8s.io/updatetask"
 )
+
+const (
+	UpdateTaskPhaseUpdate UpdateTaskPhase = "Update"
+	UpdateTaskPhaseAbort  UpdateTaskPhase = "Abort"
+)
+
+type UpdateTaskState string
+
+const (
+	UpdateTaskStateInProgress UpdateTaskState = "InProgress"
+	UpdateTaskStateUpdated    UpdateTaskState = "Updated"
+	UpdateTaskStateAborted    UpdateTaskState = "Aborted"
+)
+
+func IsTerminated(state UpdateTaskState) bool {
+	return state != UpdateTaskStateInProgress
+}

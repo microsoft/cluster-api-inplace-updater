@@ -19,22 +19,52 @@ package v1beta1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
+
+const UpdateTaskFinalizer = "updatetask.update.extension.cluster.x-k8s.io"
 
 // UpdateTaskSpec defines the desired state of UpdateTask
 type UpdateTaskSpec struct {
-	ClusterRef            *corev1.ObjectReference  `json:"clusterRef,omitempty"`
-	ControlPlaneRef       *corev1.ObjectReference  `json:"controlPlaneRef,omitempty"`
-	MachineDeploymentRef  *corev1.ObjectReference  `json:"machineDeploymentRef,omitempty"`
-	MachinesRequireUpdate []corev1.ObjectReference `json:"machinesRequireUpdate,omitempty"`
-	NewMachineSpec        MachineSpec              `json:"newMachineSpec,omitempty"`
+	// ClusterRef reference to capi Cluster
+	ClusterRef *corev1.ObjectReference `json:"clusterRef,omitempty"`
 
+	// ControlPlaneRef reference to capi controlplane cr when this is an update on controlplane
+	// +optional
+	ControlPlaneRef *corev1.ObjectReference `json:"controlPlaneRef,omitempty"`
+
+	// MachineDeploymentRef reference to capi machinedeployment cr when this is an update on machinedeployment
+	// +optional
+	MachineDeploymentRef *corev1.ObjectReference `json:"machineDeploymentRef,omitempty"`
+
+	// MachinesRequireUpdate reference to list of machines which need to be updated
+	// +optional
+	MachinesRequireUpdate []corev1.ObjectReference `json:"machinesRequireUpdate,omitempty"`
+
+	// NewMachineSpec indicates the new machine spec to be updated to
+	NewMachineSpec MachineSpec `json:"newMachineSpec,omitempty"`
+
+	// NodeUpdateTemplate indicates the template to be used for creating nodeUpdateTask
+	NodeUpdateTemplate NodeUpdateTaskTemplateSpec `json:"template,omitempty"`
+
+	// TargetPhase indicates the phase of update
 	TargetPhase UpdateTaskPhase `json:"phase,omitempty"`
+}
+
+// NodeUpdateTemplateSpec is template of nodeUpdateTask
+type NodeUpdateTaskTemplateSpec struct {
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	InfrastructureRef corev1.ObjectReference `json:"infrastructureRef"`
 }
 
 // UpdateTaskStatus defines the observed state of UpdateTask
 type UpdateTaskStatus struct {
-	Phase UpdateTaskPhase `json:"phase,omitempty"`
+	// State indicates update state
+	State UpdateTaskState `json:"state,omitempty"`
+
+	// Conditions defines current service state of the updateTask.
+	// +optional
+	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -60,4 +90,14 @@ type UpdateTaskList struct {
 
 func init() {
 	SchemeBuilder.Register(&UpdateTask{}, &UpdateTaskList{})
+}
+
+// GetConditions returns the set of conditions for this object.
+func (c *UpdateTask) GetConditions() clusterv1.Conditions {
+	return c.Status.Conditions
+}
+
+// SetConditions sets the conditions on this object.
+func (c *UpdateTask) SetConditions(conditions clusterv1.Conditions) {
+	c.Status.Conditions = conditions
 }
