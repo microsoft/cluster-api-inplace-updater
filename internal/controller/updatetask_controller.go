@@ -22,6 +22,7 @@ import (
 
 	"github.com/go-logr/logr"
 	updatev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
+	"github.com/microsoft/cluster-api-inplace-updater/internal/controller/controlplanes"
 	"github.com/microsoft/cluster-api-inplace-updater/pkg/nodes"
 	"github.com/microsoft/cluster-api-inplace-updater/pkg/scopes"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -77,7 +78,7 @@ func (r *UpdateTaskReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	defer func() {
 		if updatev1beta1.IsTerminated(updateTask.Status.State) {
 			controllerutil.RemoveFinalizer(updateTask, updatev1beta1.UpdateTaskFinalizer)
-		} else if rerr == nil {
+		} else if rerr == nil && rret.IsZero() {
 			rret.Requeue = true
 		}
 
@@ -173,7 +174,15 @@ func (r *UpdateTaskReconciler) reconcileNormal(ctx context.Context, logger logr.
 		}
 	}
 
-	// TODO: handle controlplane & preflight check
+	// handle controlplane preflight check
+	if scope.Task.Spec.ControlPlaneRef != nil {
+		if scope.Task.Spec.ControlPlaneRef.Kind == "KubeadmControlPlane" {
+			if result, err := controlplanes.PreflightCheckForKubeadmControlPlane(ctx, logger, r.Client, scope.Task.Spec.ControlPlaneRef); err != nil || !result.IsZero() {
+				return result, err
+			}
+		}
+	}
+
 	for _, machine := range scope.UpdateMachines.SortedByCreationTimestamp() {
 		if _, ok := nodeUpdateStatusMap[machine.Name]; !ok {
 
