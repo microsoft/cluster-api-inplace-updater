@@ -18,14 +18,16 @@ import (
 const ClusterUpdateTaskNameLabel = "cluster.x-k8s.io/cluster-update-task-name"
 
 type NodeUpdateTaskStatus struct {
-	MachineName string                        `json:"machineName,omitempty"`
-	Phase       updatev1beta1.UpdateTaskPhase `json:"phase,omitempty"`
-	State       updatev1beta1.UpdateTaskState `json:"state,omitempty"`
-	Conditions  clusterv1.Conditions          `json:"conditions,omitempty"`
+	CreationTimestamp metav1.Time                   `json:"creationTimestamp,omitempty"`
+	MachineName       string                        `json:"machineName,omitempty"`
+	Phase             updatev1beta1.UpdateTaskPhase `json:"phase,omitempty"`
+	State             updatev1beta1.UpdateTaskState `json:"state,omitempty"`
+	Conditions        clusterv1.Conditions          `json:"conditions,omitempty"`
 }
 
 func GetNodeUpdateTaskStatus(ctx context.Context, c client.Client, nodeUpdateTask *unstructured.Unstructured) (*NodeUpdateTaskStatus, error) {
 	status := &NodeUpdateTaskStatus{}
+	status.CreationTimestamp = nodeUpdateTask.GetCreationTimestamp()
 	if err := util.UnstructuredUnmarshalField(nodeUpdateTask, &status.MachineName, "spec", "machineName"); err != nil {
 		return nil, errors.Wrap(err, "unable to extract spec.machineName field from nodeupdatetask")
 	}

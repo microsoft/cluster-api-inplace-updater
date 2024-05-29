@@ -31,6 +31,7 @@ type UpdateTaskState string
 
 const (
 	UpdateTaskStateInProgress UpdateTaskState = "InProgress"
+	UpdateTaskStateFailed     UpdateTaskState = "Failed"
 	UpdateTaskStateUpdated    UpdateTaskState = "Updated"
 	UpdateTaskStateAborted    UpdateTaskState = "Aborted"
 )

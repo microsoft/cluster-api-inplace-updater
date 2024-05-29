@@ -30,6 +30,8 @@ import (
 	updatev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
 )
 
+// TODO: test cases
+
 var _ = Describe("UpdateTask Controller", func() {
 	Context("When reconciling a resource", func() {
 		const resourceName = "test-resource"

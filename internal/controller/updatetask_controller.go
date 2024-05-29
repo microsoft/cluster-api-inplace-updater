@@ -153,10 +153,22 @@ func (r *UpdateTaskReconciler) reconcileNormal(ctx context.Context, logger logr.
 				"name", nodeUpdateTask.GetName())
 			return ctrl.Result{}, err
 		}
-		nodeUpdateStatusMap[nodeUpdateStatus.MachineName] = nodeUpdateStatus
+
+		mLogger := logger.WithValues("machine", nodeUpdateStatus.MachineName)
+		if existingUpdateStatus, ok := nodeUpdateStatusMap[nodeUpdateStatus.MachineName]; ok {
+			mLogger.Info("there are multiple nodeUpdateTasks for same machine, will pick lastest created one")
+			if existingUpdateStatus.CreationTimestamp.Before(&nodeUpdateStatus.CreationTimestamp) {
+				nodeUpdateStatusMap[nodeUpdateStatus.MachineName] = nodeUpdateStatus
+			}
+		} else {
+			nodeUpdateStatusMap[nodeUpdateStatus.MachineName] = nodeUpdateStatus
+		}
 
 		if !updatev1beta1.IsTerminated(nodeUpdateStatus.State) {
-			logger.Info("node update is inprogress", "machine", nodeUpdateStatus.MachineName)
+			mLogger.Info("node update is inprogress")
+			return ctrl.Result{}, nil
+		} else if nodeUpdateStatus.State == updatev1beta1.UpdateTaskStateFailed {
+			mLogger.Info("nodeUpdate failed, cluster UpdateTask will get blocked. If MachineHealthCheck is configured, then UpdateTask will continue once failed machine get remediated")
 			return ctrl.Result{}, nil
 		}
 	}
@@ -165,9 +177,7 @@ func (r *UpdateTaskReconciler) reconcileNormal(ctx context.Context, logger logr.
 	for _, machine := range scope.UpdateMachines.SortedByCreationTimestamp() {
 		if _, ok := nodeUpdateStatusMap[machine.Name]; !ok {
 
-			// for new created machine, or new updateTask take in control, just skip it.
-			runningTaskName, ok := machine.Annotations[updatev1beta1.UpdateTaskAnnotationName]
-			if !ok || runningTaskName != scope.Task.Name {
+			if !isMachineInUpdateScope(machine, scope.Task.Name) {
 				continue
 			}
 
@@ -198,42 +208,61 @@ func (r *UpdateTaskReconciler) reconcileStatus(ctx context.Context, logger logr.
 				"name", nodeUpdateTask.GetName())
 			return ctrl.Result{}, err
 		}
-		nodeUpdateStatusMap[nodeUpdateStatus.MachineName] = nodeUpdateStatus
+
+		mLogger := logger.WithValues("machine", nodeUpdateStatus.MachineName)
+		if existingUpdateStatus, ok := nodeUpdateStatusMap[nodeUpdateStatus.MachineName]; ok {
+			mLogger.Info("there are multiple nodeUpdateTasks for same machine, will pick lastest created one")
+			if existingUpdateStatus.CreationTimestamp.Before(&nodeUpdateStatus.CreationTimestamp) {
+				nodeUpdateStatusMap[nodeUpdateStatus.MachineName] = nodeUpdateStatus
+			}
+		} else {
+			nodeUpdateStatusMap[nodeUpdateStatus.MachineName] = nodeUpdateStatus
+		}
 	}
 
 	updated := 0
+	aborted := 0
+	failed := 0
 	inProgress := 0
 	waitForUpdate := 0
 	total := 0
 	machines := scope.UpdateMachines.SortedByCreationTimestamp()
 	for _, machine := range machines {
-		if nodeUpdateStatus, ok := nodeUpdateStatusMap[machine.Name]; ok {
-			if updatev1beta1.IsTerminated(nodeUpdateStatus.State) {
+		nodeUpdateStatus, ok := nodeUpdateStatusMap[machine.Name]
+		if ok {
+			switch nodeUpdateStatus.State {
+			case updatev1beta1.UpdateTaskStateUpdated:
 				updated++
-			} else {
+			case updatev1beta1.UpdateTaskStateAborted:
+				aborted++
+			case updatev1beta1.UpdateTaskStateFailed:
+				failed++
+			case updatev1beta1.UpdateTaskStateInProgress:
 				inProgress++
 			}
-		} else {
+			total++
+		} else if isMachineInUpdateScope(machine, scope.Task.Name) {
 			waitForUpdate++
+			total++
 		}
 
-		runningTaskName, ok := machine.Annotations[updatev1beta1.UpdateTaskAnnotationName]
-		if ok && runningTaskName == scope.Task.Name {
-			total++
+		// only update machine which in current scope
+		if isMachineInUpdateScope(machine, scope.Task.Name) {
 			machineHelper, err := patch.NewHelper(machine, r.Client)
 			if err != nil {
 				logger.Error(err, "unable to create patchHelper for machine", "machine", machine.Name)
 				continue
 			}
 
-			if nodeUpdateStatus, ok := nodeUpdateStatusMap[machine.Name]; ok {
-				if updatev1beta1.IsTerminated(nodeUpdateStatus.State) {
-					if nodeUpdateStatus.Phase == updatev1beta1.UpdateTaskPhaseAbort {
-						conditions.MarkFalse(machine, updatev1beta1.MachineUpToDate, "Aborted", clusterv1.ConditionSeverityInfo, "Aborted")
-					} else {
-						conditions.MarkTrue(machine, updatev1beta1.MachineUpToDate)
-					}
-				} else {
+			if nodeUpdateStatus != nil {
+				switch nodeUpdateStatus.State {
+				case updatev1beta1.UpdateTaskStateUpdated:
+					conditions.MarkTrue(machine, updatev1beta1.MachineUpToDate)
+				case updatev1beta1.UpdateTaskStateAborted:
+					conditions.MarkFalse(machine, updatev1beta1.MachineUpToDate, "Aborted", clusterv1.ConditionSeverityInfo, "Aborted")
+				case updatev1beta1.UpdateTaskStateFailed:
+					conditions.MarkFalse(machine, updatev1beta1.MachineUpToDate, "Failed", clusterv1.ConditionSeverityError, "Failed")
+				case updatev1beta1.UpdateTaskStateInProgress:
 					conditions.MarkFalse(machine, updatev1beta1.MachineUpToDate, "InProgress", clusterv1.ConditionSeverityInfo, "InProgress")
 				}
 			} else {
@@ -257,7 +286,7 @@ func (r *UpdateTaskReconciler) reconcileStatus(ctx context.Context, logger logr.
 			logger.Info("updateTask aborted")
 		} else {
 			scope.Task.Status.State = updatev1beta1.UpdateTaskStateInProgress
-			msg := fmt.Sprintf("%d updated, %d aborting, %d waitForUpdate", updated, inProgress, waitForUpdate)
+			msg := fmt.Sprintf("%d updated, %d failed, %d aborted, %d aborting, %d waitForUpdate", updated, failed, aborted, inProgress, waitForUpdate)
 			conditions.MarkFalse(scope.Task, clusterv1.ReadyCondition, "Aborting", clusterv1.ConditionSeverityInfo, msg)
 			logger.Info("updateTask aborting, " + msg)
 		}
@@ -268,7 +297,7 @@ func (r *UpdateTaskReconciler) reconcileStatus(ctx context.Context, logger logr.
 			logger.Info("updateTask completed")
 		} else {
 			scope.Task.Status.State = updatev1beta1.UpdateTaskStateInProgress
-			msg := fmt.Sprintf("%d updated, %d inProgress, %d waitForUpdate", updated, inProgress, waitForUpdate)
+			msg := fmt.Sprintf("%d updated, %d failed, %d aborted, %d inProgress, %d waitForUpdate", updated, failed, aborted, inProgress, waitForUpdate)
 			conditions.MarkFalse(scope.Task, clusterv1.ReadyCondition, "InProgress", clusterv1.ConditionSeverityInfo, msg)
 			logger.Info("updateTask inprogress, " + msg)
 		}
@@ -282,4 +311,9 @@ func (r *UpdateTaskReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&updatev1beta1.UpdateTask{}).
 		Complete(r)
+}
+
+func isMachineInUpdateScope(machine *clusterv1.Machine, taskName string) bool {
+	runningTaskName, ok := machine.Annotations[updatev1beta1.UpdateTaskAnnotationName]
+	return ok && runningTaskName == taskName
 }
