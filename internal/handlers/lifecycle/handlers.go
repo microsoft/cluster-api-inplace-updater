@@ -38,11 +38,17 @@ func NewExtensionHandlers(client client.Client) *ExtensionHandlers {
 func (m *ExtensionHandlers) DoControlPlaneExternalUpdate(ctx context.Context, request *updatev1beta1.ControlPlaneExternalUpdateRequest, response *updatev1beta1.ControlPlaneExternalUpdateResponse) {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("ControlPlaneExternalUpdate is called")
+
+	//TODO: implement
+	// check if ongoing task exists, if yes, abort
+	// create new task, set annotations for machines in scope
 }
 
 func (m *ExtensionHandlers) DoMachineDeploymentExternalUpdate(ctx context.Context, request *updatev1beta1.MachineDeploymentExternalUpdateRequest, response *updatev1beta1.MachineDeploymentExternalUpdateResponse) {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("DoMachineDeploymentExternalUpdate is called")
+
+	//TODO: implement
 }
 
 // DoBeforeClusterUpdate implements the HandlerFunc for the BeforeClusterUpdate hook.

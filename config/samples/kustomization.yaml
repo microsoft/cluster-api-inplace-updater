@@ -2,4 +2,5 @@
 resources:
 - update_v1beta1_updatetask.yaml
 - update_v1beta1_updatepolicy.yaml
+- update_v1beta1_dockernodeupdatetask.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

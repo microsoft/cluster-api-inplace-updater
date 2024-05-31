@@ -60,7 +60,8 @@ func CreateNodeUpdateTask(ctx context.Context, c client.Client, task *updatev1be
 		return nil, err
 	}
 
-	labels := map[string]string{}
+	labels := task.Spec.NodeUpdateTemplate.Labels
+	labels[clusterv1.ClusterNameLabel] = task.Spec.ClusterRef.Name
 	labels[ClusterUpdateTaskNameLabel] = task.Name
 
 	taskRef := &metav1.OwnerReference{

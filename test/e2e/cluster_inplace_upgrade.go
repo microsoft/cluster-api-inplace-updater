@@ -23,12 +23,12 @@ import (
 	"path/filepath"
 	"time"
 
+	updatev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
-
 	runtimev1 "sigs.k8s.io/cluster-api/exp/runtime/api/v1alpha1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
@@ -161,26 +161,36 @@ func clusterInPlaceUpgradeSpec(ctx context.Context, inputGetter func() clusterIn
 			WaitForMachinePools:          input.E2EConfig.GetIntervals(specName, "wait-machine-pool-nodes"),
 		}, clusterResources)
 
-		// Upgrade the Cluster topology to run through an inplace upgrade process
-		By("Upgrading the Cluster topology; creation waits for BeforeClusterUpgradeHook and AfterControlPlaneUpgradeHook to gate the operation")
-		framework.UpgradeClusterTopologyAndWaitForUpgrade(ctx, framework.UpgradeClusterTopologyAndWaitForUpgradeInput{
-			ClusterProxy:                   input.BootstrapClusterProxy,
-			Cluster:                        clusterResources.Cluster,
-			ControlPlane:                   clusterResources.ControlPlane,
-			MachineDeployments:             clusterResources.MachineDeployments,
-			MachinePools:                   clusterResources.MachinePools,
-			KubernetesUpgradeVersion:       input.E2EConfig.GetVariable(KubernetesVersionUpgradeTo),
-			WaitForMachinesToBeUpgraded:    input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
-			WaitForMachinePoolToBeUpgraded: input.E2EConfig.GetIntervals(specName, "wait-machine-pool-upgrade"),
-			WaitForKubeProxyUpgrade:        input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
-			WaitForDNSUpgrade:              input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
-			WaitForEtcdUpgrade:             input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
-			PreWaitForControlPlaneToBeUpgraded: func() {
-				// TODO:
-				// 1. Eventually UpgradeTask is created, and with correct spec
-				// 2. Watch UpgradeTask status, and if progress get reflected to CAPI objs
+		// // Upgrade the Cluster topology to run through an inplace upgrade process
+		// By("Upgrading the Cluster topology; creation waits for BeforeClusterUpgradeHook and AfterControlPlaneUpgradeHook to gate the operation")
+		// framework.UpgradeClusterTopologyAndWaitForUpgrade(ctx, framework.UpgradeClusterTopologyAndWaitForUpgradeInput{
+		// 	ClusterProxy:                   input.BootstrapClusterProxy,
+		// 	Cluster:                        clusterResources.Cluster,
+		// 	ControlPlane:                   clusterResources.ControlPlane,
+		// 	MachineDeployments:             clusterResources.MachineDeployments,
+		// 	MachinePools:                   clusterResources.MachinePools,
+		// 	KubernetesUpgradeVersion:       input.E2EConfig.GetVariable(KubernetesVersionUpgradeTo),
+		// 	WaitForMachinesToBeUpgraded:    input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
+		// 	WaitForMachinePoolToBeUpgraded: input.E2EConfig.GetIntervals(specName, "wait-machine-pool-upgrade"),
+		// 	WaitForKubeProxyUpgrade:        input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
+		// 	WaitForDNSUpgrade:              input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
+		// 	WaitForEtcdUpgrade:             input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
+		// 	PreWaitForControlPlaneToBeUpgraded: func() {
+		// 		// TODO:
+		// 		// 1. Eventually UpgradeTask is created, and with correct spec
+		// 		// 2. Watch UpgradeTask status, and if progress get reflected to CAPI objs
+		// 	},
+		// })
+
+		task := &updatev1beta1.UpdateTask{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: namespace.Name,
+				Name:      clusterName,
 			},
-		})
+			Spec: updatev1beta1.UpdateTaskSpec{
+				//
+			},
+		}
 
 		By("Waiting until nodes are ready")
 		workloadProxy := input.BootstrapClusterProxy.GetWorkloadCluster(ctx, namespace.Name, clusterResources.Cluster.Name)

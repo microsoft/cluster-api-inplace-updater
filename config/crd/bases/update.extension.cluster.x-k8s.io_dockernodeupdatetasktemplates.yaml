@@ -4,14 +4,14 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: fakenodeupdatetasktemplates.update.extension.cluster.x-k8s.io
+  name: dockernodeupdatetasktemplates.update.extension.cluster.x-k8s.io
 spec:
   group: update.extension.cluster.x-k8s.io
   names:
-    kind: FakeNodeUpdateTaskTemplate
-    listKind: FakeNodeUpdateTaskTemplateList
-    plural: fakenodeupdatetasktemplates
-    singular: fakenodeupdatetasktemplate
+    kind: DockerNodeUpdateTaskTemplate
+    listKind: DockerNodeUpdateTaskTemplateList
+    plural: dockernodeupdatetasktemplates
+    singular: dockernodeupdatetasktemplate
   scope: Namespaced
   versions:
   - name: v1beta1
@@ -87,13 +87,9 @@ spec:
                         type: object
                     type: object
                   spec:
+                    description: DockerNodeUpdateTaskSpec defines the desired state
+                      of DockerNodeUpdateTask
                     properties:
-                      field1:
-                        type: string
-                      field2:
-                        type: string
-                      field3:
-                        type: string
                       machineName:
                         type: string
                       newMachineSpec:

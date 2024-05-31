@@ -4,6 +4,7 @@
 resources:
 - bases/update.extension.cluster.x-k8s.io_updatetasks.yaml
 - bases/update.extension.cluster.x-k8s.io_updatepolicies.yaml
+- bases/update.extension.cluster.x-k8s.io_dockernodeupdatetasks.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
@@ -17,6 +18,7 @@ patches:
 # patches here are for enabling the CA injection for each CRD
 #- path: patches/cainjection_in_updatetasks.yaml
 #- path: patches/cainjection_in_updatepolicies.yaml
+#- path: patches/cainjection_in_dockernodeupdatetasks.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [WEBHOOK] To enable webhook, uncomment the following section

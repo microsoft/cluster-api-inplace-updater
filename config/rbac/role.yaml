@@ -29,6 +29,32 @@ rules:
 - apiGroups:
   - update.extension.cluster.x-k8s.io
   resources:
+  - dockernodeupdatetasks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - update.extension.cluster.x-k8s.io
+  resources:
+  - dockernodeupdatetasks/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - update.extension.cluster.x-k8s.io
+  resources:
+  - dockernodeupdatetasks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - update.extension.cluster.x-k8s.io
+  resources:
   - updatetasks
   verbs:
   - create

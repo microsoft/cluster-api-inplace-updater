@@ -4,19 +4,21 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: fakenodeupdatetasks.update.extension.cluster.x-k8s.io
+  name: dockernodeupdatetasks.update.extension.cluster.x-k8s.io
 spec:
   group: update.extension.cluster.x-k8s.io
   names:
-    kind: FakeNodeUpdateTask
-    listKind: FakeNodeUpdateTaskList
-    plural: fakenodeupdatetasks
-    singular: fakenodeupdatetask
+    kind: DockerNodeUpdateTask
+    listKind: DockerNodeUpdateTaskList
+    plural: dockernodeupdatetasks
+    singular: dockernodeupdatetask
   scope: Namespaced
   versions:
   - name: v1beta1
     schema:
       openAPIV3Schema:
+        description: DockerNodeUpdateTask is the Schema for the dockernodeupdatetasks
+          API
         properties:
           apiVersion:
             description: |-
@@ -36,13 +38,8 @@ spec:
           metadata:
             type: object
           spec:
+            description: DockerNodeUpdateTaskSpec defines the desired state of DockerNodeUpdateTask
             properties:
-              field1:
-                type: string
-              field2:
-                type: string
-              field3:
-                type: string
               machineName:
                 type: string
               newMachineSpec:
@@ -113,6 +110,8 @@ spec:
                 type: string
             type: object
           status:
+            description: DockerNodeUpdateTaskStatus defines the observed state of
+              DockerNodeUpdateTask
             properties:
               conditions:
                 items:
@@ -164,3 +163,5 @@ spec:
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}

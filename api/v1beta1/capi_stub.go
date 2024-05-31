@@ -80,6 +80,7 @@ import (
         version: v1.29.0
 **/
 type MachineSpec struct {
+	Version         string `json:"version,omitempty"`
 	BootstrapConfig string `json:"bootstrapConfig,omitempty"`
 	InfraMachine    string `json:"infraMachine,omitempty"`
 }

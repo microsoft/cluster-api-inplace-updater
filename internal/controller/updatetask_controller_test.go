@@ -727,7 +727,7 @@ func RunTestCase(t *testing.T, clusterInfo *ClusterInfo, taskInfo *UpdateTaskInf
 	}
 
 	request := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: taskInfo.Name}}
-	_, err := reconcile(ctx, r, request, 5)
+	_, err := reconcileNtimes(ctx, r, request, 5)
 	g.Expect(err).NotTo(HaveOccurred())
 
 	task := &updatev1beta1.UpdateTask{}
@@ -758,7 +758,7 @@ func RunTestCase(t *testing.T, clusterInfo *ClusterInfo, taskInfo *UpdateTaskInf
 	}
 }
 
-func reconcile(ctx context.Context, r *UpdateTaskReconciler, request ctrl.Request, times int) (ctrl.Result, error) {
+func reconcileNtimes(ctx context.Context, r *UpdateTaskReconciler, request ctrl.Request, times int) (ctrl.Result, error) {
 	var result ctrl.Result
 	var err error
 	for i := 0; i < times; i++ {
