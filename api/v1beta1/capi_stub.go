@@ -19,16 +19,69 @@ package v1beta1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	runtimehooksv1 "sigs.k8s.io/cluster-api/exp/runtime/hooks/api/v1alpha1"
 )
 
+// TODO: how to define machine spec???
+/**
+// kubeadmControlPlane
+   kubeadmConfigSpec:
+      clusterConfiguration:
+        apiServer:
+          certSANs:
+          - localhost
+          - 127.0.0.1
+          - 0.0.0.0
+          - host.docker.internal
+        controllerManager:
+          extraArgs:
+            enable-hostpath-provisioner: "true"
+        dns: {}
+        etcd: {}
+        networking: {}
+        scheduler: {}
+      format: cloud-config
+      initConfiguration:
+        localAPIEndpoint: {}
+        nodeRegistration:
+          imagePullPolicy: IfNotPresent
+      joinConfiguration:
+        discovery: {}
+        nodeRegistration:
+          imagePullPolicy: IfNotPresent
+    machineTemplate:
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: DockerMachineTemplate
+        name: md-scale-au4y6s-control-plane
+        namespace: md-scale-c12jos
+      metadata: {}
+
+// machineDeployment
+    template:
+      metadata:
+        labels:
+          cluster.x-k8s.io/cluster-name: md-scale-au4y6s
+          cluster.x-k8s.io/deployment-name: md-scale-au4y6s-md-0
+      spec:
+        bootstrap:
+          configRef:
+            apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+            kind: KubeadmConfigTemplate
+            name: md-scale-au4y6s-md-0
+        clusterName: md-scale-au4y6s
+        failureDomain: fd4
+        infrastructureRef:
+          apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+          kind: DockerMachineTemplate
+          name: md-scale-au4y6s-md-0
+        version: v1.29.0
+**/
 type MachineSpec struct {
-	Machine         *clusterv1.Machine         `json:"machine,omitempty"`
-	BootstrapConfig *unstructured.Unstructured `json:"bootstrapConfig,omitempty"`
-	InfraMachine    *unstructured.Unstructured `json:"infraMachine,omitempty"`
+	BootstrapConfig string `json:"bootstrapConfig,omitempty"`
+	InfraMachine    string `json:"infraMachine,omitempty"`
 }
 
 func ControlPlaneExternalUpdate(*ControlPlaneExternalUpdateRequest, *ControlPlaneExternalUpdateResponse) {

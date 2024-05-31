@@ -2,6 +2,7 @@ package scopes
 
 import (
 	"context"
+	"strings"
 
 	"github.com/go-logr/logr"
 	updatev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
@@ -65,14 +66,14 @@ func New(ctx context.Context, logger logr.Logger, c client.Client, task *updatev
 
 	nodeUpdateList := &unstructured.UnstructuredList{}
 	nodeUpdateList.SetAPIVersion(task.Spec.NodeUpdateTemplate.InfrastructureRef.APIVersion)
-	nodeUpdateList.SetKind(task.Spec.NodeUpdateTemplate.InfrastructureRef.Kind)
+	nodeUpdateList.SetKind(strings.TrimSuffix(task.Spec.NodeUpdateTemplate.InfrastructureRef.Kind, "Template"))
 	if err := c.List(ctx, nodeUpdateList, client.InNamespace(namespace), client.MatchingLabels{nodes.ClusterUpdateTaskNameLabel: task.Name}); err != nil {
 		logger.Error(err, "unable to list nodeUpdate CRs", "clusterName", task.Spec.ClusterRef.Name)
 		return nil, err
 	}
 	nodeUpdateTasks := []*unstructured.Unstructured{}
 	for _, nodeUpdateTask := range nodeUpdateList.Items {
-		nodeUpdateTasks = append(nodeUpdateTasks, &nodeUpdateTask)
+		nodeUpdateTasks = append(nodeUpdateTasks, nodeUpdateTask.DeepCopy())
 	}
 
 	patchHelper, err := patch.NewHelper(task, c)

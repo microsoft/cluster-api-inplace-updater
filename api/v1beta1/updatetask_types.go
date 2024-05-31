@@ -24,6 +24,20 @@ import (
 
 const UpdateTaskFinalizer = "updatetask.update.extension.cluster.x-k8s.io"
 
+const (
+	UpdateOperationCondition clusterv1.ConditionType = "UpdateOperation"
+	AbortOperationCondition  clusterv1.ConditionType = "AbortOperation"
+	TrackOperationCondition  clusterv1.ConditionType = "TrackOperation"
+)
+
+const (
+	NodeUpdateFailedReason       = "UpdateFailed"
+	PreflightCheckFailedReason   = "PreflightCheckFailed"
+	CreateNodeUpdateFailedReason = "CreateNodeUpdateFailed"
+
+	AbortNodeUpdateFailedReason = "AbortNodeUpdateFailed"
+)
+
 // UpdateTaskSpec defines the desired state of UpdateTask
 type UpdateTaskSpec struct {
 	// ClusterRef reference to capi Cluster

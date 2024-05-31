@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	updatev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
@@ -35,6 +36,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+)
+
+const (
+	waitRequeueAfter    = 30 * time.Second
+	changedRequeueAfter = 100 * time.Millisecond
 )
 
 // UpdateTaskReconciler reconciles a UpdateTask object
@@ -82,6 +88,12 @@ func (r *UpdateTaskReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			rret.Requeue = true
 		}
 
+		conditions.SetSummary(updateTask, conditions.WithConditions(
+			updatev1beta1.UpdateOperationCondition,
+			updatev1beta1.AbortOperationCondition,
+			updatev1beta1.TrackOperationCondition,
+		))
+
 		err := helper.Patch(ctx, updateTask)
 		if err != nil {
 			logger.Error(err, "unable to patch update task")
@@ -92,7 +104,7 @@ func (r *UpdateTaskReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if !controllerutil.ContainsFinalizer(updateTask, updatev1beta1.UpdateTaskFinalizer) {
 		controllerutil.AddFinalizer(updateTask, updatev1beta1.UpdateTaskFinalizer)
 		// save immediately
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: changedRequeueAfter}, nil
 	}
 
 	scope, err := scopes.New(ctx, logger, r.Client, updateTask)
@@ -100,24 +112,25 @@ func (r *UpdateTaskReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	if result, err := r.reconcileStatus(ctx, logger, scope); err != nil {
+		return result, err
+	}
+
 	if !updateTask.DeletionTimestamp.IsZero() || updateTask.Spec.TargetPhase == updatev1beta1.UpdateTaskPhaseAbort {
-		if result, err := r.reconcileAbort(ctx, logger, scope); err != nil {
+		if result, err := r.reconcileAbort(ctx, logger, scope); err != nil || !result.IsZero() {
 			return result, err
 		}
 	} else if updateTask.Spec.TargetPhase == updatev1beta1.UpdateTaskPhaseUpdate {
-		if result, err := r.reconcileNormal(ctx, logger, scope); err != nil {
+		if result, err := r.reconcileNormal(ctx, logger, scope); err != nil || !result.IsZero() {
 			return result, err
 		}
-	}
-
-	if result, err := r.reconcileStatus(ctx, logger, scope); err != nil {
-		return result, err
 	}
 
 	return ctrl.Result{}, nil
 }
 
 func (r *UpdateTaskReconciler) reconcileAbort(ctx context.Context, logger logr.Logger, scope *scopes.UpdateTaskScope) (ctrl.Result, error) {
+	conditions.Delete(scope.Task, updatev1beta1.UpdateOperationCondition)
 	for _, nodeUpdateTask := range scope.NodeUpdateTasks {
 		nodeUpdateStatus, err := nodes.GetNodeUpdateTaskStatus(ctx, r.Client, nodeUpdateTask)
 		if err != nil {
@@ -131,15 +144,18 @@ func (r *UpdateTaskReconciler) reconcileAbort(ctx context.Context, logger logr.L
 		if !updatev1beta1.IsTerminated(nodeUpdateStatus.State) {
 			err := nodes.AbortNodeUpdateTask(ctx, r.Client, nodeUpdateTask)
 			if err != nil {
-				logger.Error(err, "cannot abort nodeUpdateTask",
+				msg := "cannot abort nodeUpdateTask. " + err.Error()
+				logger.Error(err, msg,
 					"apiVersion", nodeUpdateTask.GetAPIVersion(),
 					"kind", nodeUpdateTask.GetKind(),
 					"name", nodeUpdateTask.GetName())
+				conditions.MarkFalse(scope.Task, updatev1beta1.AbortOperationCondition, updatev1beta1.AbortNodeUpdateFailedReason, clusterv1.ConditionSeverityError, msg)
 				return ctrl.Result{}, err
 			}
 		}
 	}
 
+	conditions.MarkTrue(scope.Task, updatev1beta1.AbortOperationCondition)
 	return ctrl.Result{}, nil
 }
 
@@ -167,9 +183,12 @@ func (r *UpdateTaskReconciler) reconcileNormal(ctx context.Context, logger logr.
 
 		if !updatev1beta1.IsTerminated(nodeUpdateStatus.State) {
 			mLogger.Info("node update is inprogress")
+			conditions.MarkTrue(scope.Task, updatev1beta1.UpdateOperationCondition)
 			return ctrl.Result{}, nil
 		} else if nodeUpdateStatus.State == updatev1beta1.UpdateTaskStateFailed {
-			mLogger.Info("nodeUpdate failed, cluster UpdateTask will get blocked. If MachineHealthCheck is configured, then UpdateTask will continue once failed machine get remediated")
+			msg := "nodeUpdate failed, cluster UpdateTask will get blocked. If MachineHealthCheck is configured, then UpdateTask will continue once failed machine get remediated"
+			mLogger.Info(msg)
+			conditions.MarkFalse(scope.Task, updatev1beta1.UpdateOperationCondition, updatev1beta1.NodeUpdateFailedReason, clusterv1.ConditionSeverityError, msg)
 			return ctrl.Result{}, nil
 		}
 	}
@@ -178,6 +197,9 @@ func (r *UpdateTaskReconciler) reconcileNormal(ctx context.Context, logger logr.
 	if scope.Task.Spec.ControlPlaneRef != nil {
 		if scope.Task.Spec.ControlPlaneRef.Kind == "KubeadmControlPlane" {
 			if result, err := controlplanes.PreflightCheckForKubeadmControlPlane(ctx, logger, r.Client, scope.Task.Spec.ControlPlaneRef); err != nil || !result.IsZero() {
+				msg := "controlplane preflight check failed"
+				logger.Info(msg)
+				conditions.MarkFalse(scope.Task, updatev1beta1.UpdateOperationCondition, updatev1beta1.PreflightCheckFailedReason, clusterv1.ConditionSeverityError, msg)
 				return result, err
 			}
 		}
@@ -193,16 +215,20 @@ func (r *UpdateTaskReconciler) reconcileNormal(ctx context.Context, logger logr.
 			// found not updated machine!
 			_, err := nodes.CreateNodeUpdateTask(ctx, r.Client, scope.Task, machine)
 			if err != nil {
-				logger.Error(err, "unable to create nodeUpdateTask", "machine", machine.Name)
+				msg := "unable to create nodeUpdateTask. " + err.Error()
+				logger.Error(err, msg, "machine", machine.Name)
+				conditions.MarkFalse(scope.Task, updatev1beta1.UpdateOperationCondition, updatev1beta1.CreateNodeUpdateFailedReason, clusterv1.ConditionSeverityError, msg)
 				return ctrl.Result{}, err
 			} else {
 				logger.Info("created nodeUpdateTask", "machine", machine.Name)
 			}
 
-			return ctrl.Result{}, nil
+			conditions.MarkTrue(scope.Task, updatev1beta1.UpdateOperationCondition)
+			return ctrl.Result{RequeueAfter: changedRequeueAfter}, nil
 		}
 	}
 
+	conditions.MarkTrue(scope.Task, updatev1beta1.UpdateOperationCondition)
 	return ctrl.Result{}, nil
 }
 
@@ -246,7 +272,7 @@ func (r *UpdateTaskReconciler) reconcileStatus(ctx context.Context, logger logr.
 				aborted++
 			case updatev1beta1.UpdateTaskStateFailed:
 				failed++
-			case updatev1beta1.UpdateTaskStateInProgress:
+			case updatev1beta1.UpdateTaskStateInProgress, updatev1beta1.UpdateTaskStateUnknown:
 				inProgress++
 			}
 			total++
@@ -291,23 +317,23 @@ func (r *UpdateTaskReconciler) reconcileStatus(ctx context.Context, logger logr.
 	if !scope.Task.DeletionTimestamp.IsZero() || scope.Task.Spec.TargetPhase == updatev1beta1.UpdateTaskPhaseAbort {
 		if inProgress == 0 {
 			scope.Task.Status.State = updatev1beta1.UpdateTaskStateAborted
-			conditions.MarkTrue(scope.Task, clusterv1.ReadyCondition)
+			conditions.MarkTrue(scope.Task, updatev1beta1.TrackOperationCondition)
 			logger.Info("updateTask aborted")
 		} else {
 			scope.Task.Status.State = updatev1beta1.UpdateTaskStateInProgress
 			msg := fmt.Sprintf("%d updated, %d failed, %d aborted, %d aborting, %d waitForUpdate", updated, failed, aborted, inProgress, waitForUpdate)
-			conditions.MarkFalse(scope.Task, clusterv1.ReadyCondition, "Aborting", clusterv1.ConditionSeverityInfo, msg)
+			conditions.MarkFalse(scope.Task, updatev1beta1.TrackOperationCondition, "Aborting", clusterv1.ConditionSeverityInfo, msg)
 			logger.Info("updateTask aborting, " + msg)
 		}
 	} else { // updating
 		if total == updated {
 			scope.Task.Status.State = updatev1beta1.UpdateTaskStateUpdated
-			conditions.MarkTrue(scope.Task, clusterv1.ReadyCondition)
+			conditions.MarkTrue(scope.Task, updatev1beta1.TrackOperationCondition)
 			logger.Info("updateTask completed")
 		} else {
 			scope.Task.Status.State = updatev1beta1.UpdateTaskStateInProgress
 			msg := fmt.Sprintf("%d updated, %d failed, %d aborted, %d inProgress, %d waitForUpdate", updated, failed, aborted, inProgress, waitForUpdate)
-			conditions.MarkFalse(scope.Task, clusterv1.ReadyCondition, "InProgress", clusterv1.ConditionSeverityInfo, msg)
+			conditions.MarkFalse(scope.Task, updatev1beta1.TrackOperationCondition, "InProgress", clusterv1.ConditionSeverityInfo, msg)
 			logger.Info("updateTask inprogress, " + msg)
 		}
 	}

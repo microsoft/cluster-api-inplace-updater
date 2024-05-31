@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const ClusterUpdateTaskNameLabel = "cluster.x-k8s.io/cluster-update-task-name"
+const ClusterUpdateTaskNameLabel = "update.extension.cluster.x-k8s.io/cluster-update-task-name"
 
 type NodeUpdateTaskStatus struct {
 	CreationTimestamp metav1.Time                   `json:"creationTimestamp,omitempty"`
@@ -35,7 +35,8 @@ func GetNodeUpdateTaskStatus(ctx context.Context, c client.Client, nodeUpdateTas
 		return nil, errors.Wrap(err, "unable to extract spec.phase field from nodeupdatetask")
 	}
 	if err := util.UnstructuredUnmarshalField(nodeUpdateTask, &status.State, "status", "state"); err != nil {
-		return nil, errors.Wrap(err, "unable to extract status.state field from nodeupdatetask")
+		// it's possible status not initialized
+		status.State = updatev1beta1.UpdateTaskStateUnknown
 	}
 	_ = util.UnstructuredUnmarshalField(nodeUpdateTask, &status.Conditions, "status", "conditions")
 
@@ -83,13 +84,22 @@ func CreateNodeUpdateTask(ctx context.Context, c client.Client, task *updatev1be
 		return nil, err
 	}
 
-	if err := unstructured.SetNestedField(nodeUpdateTask.Object, task.Spec.NewMachineSpec, "spec", "newMachineSpec"); err != nil {
-		return nil, errors.Wrap(err, "unable to set spec.newMachineSpec for nodeupdatetask")
+	if err := unstructured.SetNestedField(nodeUpdateTask.Object, task.Spec.NewMachineSpec.BootstrapConfig, "spec", "newMachineSpec", "bootstrapConfig"); err != nil {
+		return nil, errors.Wrap(err, "unable to set spec.newMachineSpec.bootstrapConfig for nodeupdatetask")
+	}
+
+	if err := unstructured.SetNestedField(nodeUpdateTask.Object, task.Spec.NewMachineSpec.InfraMachine, "spec", "newMachineSpec", "infraMachine"); err != nil {
+		return nil, errors.Wrap(err, "unable to set spec.newMachineSpec.infraMachine for nodeupdatetask")
 	}
 
 	if err := unstructured.SetNestedField(nodeUpdateTask.Object, machine.Name, "spec", "machineName"); err != nil {
 		return nil, errors.Wrap(err, "unable to set spec.machineName for nodeupdatetask")
 	}
 
-	return nodeUpdateTask, nil
+	err = c.Create(ctx, nodeUpdateTask)
+	if err != nil {
+		err = errors.Wrap(err, "create nodeupdatetask failed")
+	}
+
+	return nodeUpdateTask, err
 }

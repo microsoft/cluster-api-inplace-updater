@@ -19,7 +19,7 @@ package v1beta1
 type UpdateTaskPhase string
 
 const (
-	UpdateTaskAnnotationName = "update.extension.cluster.x-k8s.io/updatetask"
+	UpdateTaskAnnotationName = "update.extension.cluster.x-k8s.io/cluster-update-task-name"
 )
 
 const (
@@ -30,6 +30,7 @@ const (
 type UpdateTaskState string
 
 const (
+	UpdateTaskStateUnknown    UpdateTaskState = ""
 	UpdateTaskStateInProgress UpdateTaskState = "InProgress"
 	UpdateTaskStateFailed     UpdateTaskState = "Failed"
 	UpdateTaskStateUpdated    UpdateTaskState = "Updated"
@@ -37,5 +38,7 @@ const (
 )
 
 func IsTerminated(state UpdateTaskState) bool {
-	return state != UpdateTaskStateInProgress
+	return state == UpdateTaskStateFailed ||
+		state == UpdateTaskStateUpdated ||
+		state == UpdateTaskStateAborted
 }
