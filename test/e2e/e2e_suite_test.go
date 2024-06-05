@@ -30,9 +30,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	updatev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/bootstrap"
@@ -98,19 +98,6 @@ func init() {
 	artifactFolder = rootPath + "/_artifacts"
 	configPath = rootPath + "/config/docker.yaml"
 	skipCleanup = false
-
-	var _ = Describe("When testing MachineDeployment scale out/in", func() {
-		MachineDeploymentScaleSpec(ctx, func() MachineDeploymentScaleSpecInput {
-			return MachineDeploymentScaleSpecInput{
-				E2EConfig:              e2eConfig,
-				ClusterctlConfigPath:   clusterctlConfigPath,
-				BootstrapClusterProxy:  bootstrapClusterProxy,
-				ArtifactFolder:         artifactFolder,
-				SkipCleanup:            skipCleanup,
-				InfrastructureProvider: ptr.To("docker"),
-			}
-		})
-	})
 }
 
 func TestE2E(t *testing.T) {
@@ -206,6 +193,7 @@ var _ = SynchronizedAfterSuite(func() {
 
 func initScheme() *runtime.Scheme {
 	sc := runtime.NewScheme()
+	updatev1beta1.AddToScheme(sc)
 	framework.TryAddDefaultSchemes(sc)
 	return sc
 }

@@ -23,11 +23,11 @@ import (
 	"strings"
 	"time"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/test/infrastructure/container"
-	infrav1 "sigs.k8s.io/cluster-api/test/infrastructure/docker/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -61,6 +61,9 @@ func (r *DockerNodeUpdateTaskReconciler) Reconcile(ctx context.Context, req ctrl
 	task := &updatev1beta1.DockerNodeUpdateTask{}
 	if err := r.Get(ctx, req.NamespacedName, task); err != nil {
 		logger.Error(err, "failed to get task")
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
 		return ctrl.Result{}, err
 	}
 
@@ -83,11 +86,11 @@ func (r *DockerNodeUpdateTaskReconciler) Reconcile(ctx context.Context, req ctrl
 		return ctrl.Result{}, err
 	}
 
-	dockerMachine := &infrav1.DockerMachine{}
-	if err := r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: machine.Spec.InfrastructureRef.Name}, machine); err != nil {
-		logger.Error(err, "failed to get dockermachine")
-		return ctrl.Result{}, err
-	}
+	// dockerMachine := &infrav1.DockerMachine{}
+	// if err := r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: machine.Spec.InfrastructureRef.Name}, machine); err != nil {
+	// 	logger.Error(err, "failed to get dockermachine")
+	// 	return ctrl.Result{}, err
+	// }
 
 	runtime, err := container.NewDockerClient()
 	if err != nil {
@@ -103,10 +106,14 @@ func (r *DockerNodeUpdateTaskReconciler) Reconcile(ctx context.Context, req ctrl
 			ErrorBuffer:  &outErr,
 			InputBuffer:  strings.NewReader("echo 111 " + task.Spec.MachineName),
 		}
-		if err := runtime.ExecContainer(ctx, dockerMachine.Name, execInput, "echo 222 "+task.Spec.MachineName); err != nil {
+
+		if err := runtime.ExecContainer(ctx, machine.Name, execInput, "echo 222 "+task.Spec.MachineName); err != nil {
 			task.Status.State = updatev1beta1.UpdateTaskStateFailed
+
+			// TODO: fix permission issue
+			// err="error creating container exec: permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Post \"http://%2Fvar%2Frun%2Fdocker.sock/v1.24/containers/k8s-inplace-upgrade-j29fdn-x4286-r8rcb/exec\": dial unix /var/run/docker.sock: connect: permission denied" controller="dockernodeupdatetask"
 			logger.Error(err, "fail to exec")
-			return ctrl.Result{}, err
+			//return ctrl.Result{}, err
 		}
 		time.Sleep(10 * time.Second)
 

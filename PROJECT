@@ -34,4 +34,13 @@ resources:
   kind: DockerNodeUpdateTask
   path: github.com/microsoft/cluster-api-inplace-updater/api/v1beta1
   version: v1beta1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: extension.cluster.x-k8s.io
+  group: update
+  kind: DockerNodeUpdateTaskTemplate
+  path: github.com/microsoft/cluster-api-inplace-updater/api/v1beta1
+  version: v1beta1
 version: "3"

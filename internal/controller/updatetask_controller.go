@@ -49,6 +49,11 @@ type UpdateTaskReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+//+kubebuilder:rbac:groups=controlplane.cluster.x-k8s.io,resources=kubeadmcontrolplanes;kubeadmcontrolplanes/status,verbs=get;list;watch
+//+kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters;clusters/status,verbs=get;list;watch
+//+kubebuilder:rbac:groups=cluster.x-k8s.io,resources=machines;machines/status,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=update.extension.cluster.x-k8s.io,resources=dockernodeupdatetasktemplates,verbs=get;list;watch
+
 //+kubebuilder:rbac:groups=update.extension.cluster.x-k8s.io,resources=updatetasks,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=update.extension.cluster.x-k8s.io,resources=updatetasks/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=update.extension.cluster.x-k8s.io,resources=updatetasks/finalizers,verbs=update
@@ -196,11 +201,13 @@ func (r *UpdateTaskReconciler) reconcileNormal(ctx context.Context, logger logr.
 	// handle controlplane preflight check
 	if scope.Task.Spec.ControlPlaneRef != nil {
 		if scope.Task.Spec.ControlPlaneRef.Kind == "KubeadmControlPlane" {
-			if result, err := controlplanes.PreflightCheckForKubeadmControlPlane(ctx, logger, r.Client, scope.Task.Spec.ControlPlaneRef); err != nil || !result.IsZero() {
+			if result, err := controlplanes.PreflightCheckForKubeadmControlPlane(ctx, logger, r.Client, scope.Task.Namespace, scope.Task.Spec.ControlPlaneRef); err != nil || !result.IsZero() {
 				msg := "controlplane preflight check failed"
 				logger.Info(msg)
-				conditions.MarkFalse(scope.Task, updatev1beta1.UpdateOperationCondition, updatev1beta1.PreflightCheckFailedReason, clusterv1.ConditionSeverityError, msg)
+				conditions.MarkFalse(scope.Task, updatev1beta1.UpdateOperationCondition, updatev1beta1.PreflightCheckFailedReason, clusterv1.ConditionSeverityWarning, msg)
 				return result, err
+			} else {
+				conditions.MarkTrue(scope.Task, updatev1beta1.UpdateOperationCondition)
 			}
 		}
 	}

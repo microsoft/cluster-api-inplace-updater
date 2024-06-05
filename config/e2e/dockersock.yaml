@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: capi-inplace-updater-controller-manager
+  namespace: capi-inplace-updater-system
+spec:
+  template:
+    spec:
+      containers:
+      - name: manager
+        volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: dockersock
+        securityContext:
+          privileged: true
+          allowPrivilegeEscalation: true
+      volumes:
+      - name: dockersock
+        hostPath:
+          path: /var/run/docker.sock

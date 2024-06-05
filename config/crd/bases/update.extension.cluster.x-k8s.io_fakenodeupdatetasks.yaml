@@ -108,6 +108,8 @@ spec:
                     type: string
                   infraMachine:
                     type: string
+                  version:
+                    type: string
                 type: object
               phase:
                 type: string

@@ -57,10 +57,13 @@ func AbortNodeUpdateTask(ctx context.Context, c client.Client, nodeUpdateTask *u
 func CreateNodeUpdateTask(ctx context.Context, c client.Client, task *updatev1beta1.UpdateTask, machine *clusterv1.Machine) (*unstructured.Unstructured, error) {
 	template, err := external.Get(ctx, c, &task.Spec.NodeUpdateTemplate.InfrastructureRef, task.Namespace)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "unable to get nodeUpdateTemplate")
 	}
 
 	labels := task.Spec.NodeUpdateTemplate.Labels
+	if labels == nil {
+		labels = map[string]string{}
+	}
 	labels[clusterv1.ClusterNameLabel] = task.Spec.ClusterRef.Name
 	labels[ClusterUpdateTaskNameLabel] = task.Name
 
@@ -85,12 +88,20 @@ func CreateNodeUpdateTask(ctx context.Context, c client.Client, task *updatev1be
 		return nil, err
 	}
 
+	if err := unstructured.SetNestedField(nodeUpdateTask.Object, string(updatev1beta1.UpdateTaskPhaseUpdate), "spec", "phase"); err != nil {
+		return nil, errors.Wrap(err, "unable to set spec.phase for nodeupdatetask")
+	}
+
 	if err := unstructured.SetNestedField(nodeUpdateTask.Object, task.Spec.NewMachineSpec.BootstrapConfig, "spec", "newMachineSpec", "bootstrapConfig"); err != nil {
 		return nil, errors.Wrap(err, "unable to set spec.newMachineSpec.bootstrapConfig for nodeupdatetask")
 	}
 
 	if err := unstructured.SetNestedField(nodeUpdateTask.Object, task.Spec.NewMachineSpec.InfraMachine, "spec", "newMachineSpec", "infraMachine"); err != nil {
 		return nil, errors.Wrap(err, "unable to set spec.newMachineSpec.infraMachine for nodeupdatetask")
+	}
+
+	if err := unstructured.SetNestedField(nodeUpdateTask.Object, task.Spec.NewMachineSpec.Version, "spec", "newMachineSpec", "version"); err != nil {
+		return nil, errors.Wrap(err, "unable to set spec.newMachineSpec.version for nodeupdatetask")
 	}
 
 	if err := unstructured.SetNestedField(nodeUpdateTask.Object, machine.Name, "spec", "machineName"); err != nil {

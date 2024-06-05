@@ -32,9 +32,9 @@ const (
 	dependentCertRequeueAfter = 30 * time.Second
 )
 
-func PreflightCheckForKubeadmControlPlane(ctx context.Context, logger logr.Logger, c client.Client, controlPlaneRef *corev1.ObjectReference) (ctrl.Result, error) {
+func PreflightCheckForKubeadmControlPlane(ctx context.Context, logger logr.Logger, c client.Client, namespace string, controlPlaneRef *corev1.ObjectReference) (ctrl.Result, error) {
 	controlPlane := &controlplanev1.KubeadmControlPlane{}
-	err := c.Get(ctx, types.NamespacedName{Namespace: controlPlaneRef.Namespace, Name: controlPlaneRef.Name}, controlPlane)
+	err := c.Get(ctx, types.NamespacedName{Namespace: namespace, Name: controlPlaneRef.Name}, controlPlane)
 	if err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "cannot get KubeadmControlPlane from reference")
 	}

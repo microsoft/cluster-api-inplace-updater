@@ -5,6 +5,7 @@ resources:
 - bases/update.extension.cluster.x-k8s.io_updatetasks.yaml
 - bases/update.extension.cluster.x-k8s.io_updatepolicies.yaml
 - bases/update.extension.cluster.x-k8s.io_dockernodeupdatetasks.yaml
+- bases/update.extension.cluster.x-k8s.io_dockernodeupdatetasktemplates.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:

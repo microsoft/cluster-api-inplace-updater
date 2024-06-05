@@ -17,6 +17,37 @@ rules:
   verbs:
   - create
 - apiGroups:
+  - cluster.x-k8s.io
+  resources:
+  - clusters
+  - clusters/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cluster.x-k8s.io
+  resources:
+  - machines
+  - machines/status
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - controlplane.cluster.x-k8s.io
+  resources:
+  - kubeadmcontrolplanes
+  - kubeadmcontrolplanes/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - ""
   resources:
   - configmaps
@@ -52,6 +83,14 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - update.extension.cluster.x-k8s.io
+  resources:
+  - dockernodeupdatetasktemplates
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - update.extension.cluster.x-k8s.io
   resources:
