@@ -23,16 +23,21 @@ import (
 	"path/filepath"
 	"time"
 
+	updatev1beta1 "github.com/microsoft/cluster-api-inplace-updater/api/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
-
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	runtimev1 "sigs.k8s.io/cluster-api/exp/runtime/api/v1alpha1"
 	"sigs.k8s.io/cluster-api/test/framework"
 	"sigs.k8s.io/cluster-api/test/framework/clusterctl"
 	"sigs.k8s.io/cluster-api/util"
+	"sigs.k8s.io/cluster-api/util/conditions"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // clusterInPlaceUpgradeSpecInput is the input for clusterInPlaceUpgradeSpec.
@@ -99,13 +104,13 @@ func clusterInPlaceUpgradeSpec(ctx context.Context, inputGetter func() clusterIn
 		Expect(input.E2EConfig.Variables).To(HaveKey(KubernetesVersionUpgradeTo))
 
 		if input.ControlPlaneMachineCount == nil {
-			controlPlaneMachineCount = 1
+			controlPlaneMachineCount = 3
 		} else {
 			controlPlaneMachineCount = *input.ControlPlaneMachineCount
 		}
 
 		if input.WorkerMachineCount == nil {
-			workerMachineCount = 2
+			workerMachineCount = 1
 		} else {
 			workerMachineCount = *input.WorkerMachineCount
 		}
@@ -130,11 +135,6 @@ func clusterInPlaceUpgradeSpec(ctx context.Context, inputGetter func() clusterIn
 			To(Succeed(), "Failed to create the extension config")
 
 		By("Creating a workload cluster; creation waits for BeforeClusterCreateHook to gate the operation")
-
-		// clusterRef := types.NamespacedName{
-		// 	Name:      clusterName,
-		// 	Namespace: namespace.Name,
-		// }
 
 		infrastructureProvider := clusterctl.DefaultInfrastructureProvider
 		if input.InfrastructureProvider != nil {
@@ -161,36 +161,114 @@ func clusterInPlaceUpgradeSpec(ctx context.Context, inputGetter func() clusterIn
 			WaitForMachinePools:          input.E2EConfig.GetIntervals(specName, "wait-machine-pool-nodes"),
 		}, clusterResources)
 
-		// Upgrade the Cluster topology to run through an inplace upgrade process
-		By("Upgrading the Cluster topology; creation waits for BeforeClusterUpgradeHook and AfterControlPlaneUpgradeHook to gate the operation")
-		framework.UpgradeClusterTopologyAndWaitForUpgrade(ctx, framework.UpgradeClusterTopologyAndWaitForUpgradeInput{
-			ClusterProxy:                   input.BootstrapClusterProxy,
-			Cluster:                        clusterResources.Cluster,
-			ControlPlane:                   clusterResources.ControlPlane,
-			MachineDeployments:             clusterResources.MachineDeployments,
-			MachinePools:                   clusterResources.MachinePools,
-			KubernetesUpgradeVersion:       input.E2EConfig.GetVariable(KubernetesVersionUpgradeTo),
-			WaitForMachinesToBeUpgraded:    input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
-			WaitForMachinePoolToBeUpgraded: input.E2EConfig.GetIntervals(specName, "wait-machine-pool-upgrade"),
-			WaitForKubeProxyUpgrade:        input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
-			WaitForDNSUpgrade:              input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
-			WaitForEtcdUpgrade:             input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
-			PreWaitForControlPlaneToBeUpgraded: func() {
-				// TODO:
-				// 1. Eventually UpgradeTask is created, and with correct spec
-				// 2. Watch UpgradeTask status, and if progress get reflected to CAPI objs
-			},
-		})
+		// // Upgrade the Cluster topology to run through an inplace upgrade process
+		// By("Upgrading the Cluster topology; creation waits for BeforeClusterUpgradeHook and AfterControlPlaneUpgradeHook to gate the operation")
+		// framework.UpgradeClusterTopologyAndWaitForUpgrade(ctx, framework.UpgradeClusterTopologyAndWaitForUpgradeInput{
+		// 	ClusterProxy:                   input.BootstrapClusterProxy,
+		// 	Cluster:                        clusterResources.Cluster,
+		// 	ControlPlane:                   clusterResources.ControlPlane,
+		// 	MachineDeployments:             clusterResources.MachineDeployments,
+		// 	MachinePools:                   clusterResources.MachinePools,
+		// 	KubernetesUpgradeVersion:       input.E2EConfig.GetVariable(KubernetesVersionUpgradeTo),
+		// 	WaitForMachinesToBeUpgraded:    input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
+		// 	WaitForMachinePoolToBeUpgraded: input.E2EConfig.GetIntervals(specName, "wait-machine-pool-upgrade"),
+		// 	WaitForKubeProxyUpgrade:        input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
+		// 	WaitForDNSUpgrade:              input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
+		// 	WaitForEtcdUpgrade:             input.E2EConfig.GetIntervals(specName, "wait-machine-upgrade"),
+		// 	PreWaitForControlPlaneToBeUpgraded: func() {
+		// 		// TODO:
+		// 		// 1. Eventually UpgradeTask is created, and with correct spec
+		// 		// 2. Watch UpgradeTask status, and if progress get reflected to CAPI objs
+		// 	},
+		// })
 
-		By("Waiting until nodes are ready")
-		workloadProxy := input.BootstrapClusterProxy.GetWorkloadCluster(ctx, namespace.Name, clusterResources.Cluster.Name)
-		workloadClient := workloadProxy.GetClient()
-		framework.WaitForNodesReady(ctx, framework.WaitForNodesReadyInput{
-			Lister:            workloadClient,
-			KubernetesVersion: input.E2EConfig.GetVariable(KubernetesVersionUpgradeTo),
-			Count:             int(clusterResources.ExpectedTotalNodes()),
-			WaitForNodesReady: input.E2EConfig.GetIntervals(specName, "wait-nodes-ready"),
-		})
+		// By("Waiting until nodes are ready")
+		// workloadProxy := input.BootstrapClusterProxy.GetWorkloadCluster(ctx, namespace.Name, clusterResources.Cluster.Name)
+		// workloadClient := workloadProxy.GetClient()
+		// framework.WaitForNodesReady(ctx, framework.WaitForNodesReadyInput{
+		// 	Lister:            workloadClient,
+		// 	KubernetesVersion: input.E2EConfig.GetVariable(KubernetesVersionUpgradeTo),
+		// 	Count:             int(clusterResources.ExpectedTotalNodes()),
+		// 	WaitForNodesReady: input.E2EConfig.GetIntervals(specName, "wait-nodes-ready"),
+		// })
+
+		By("Issuing inplace update")
+
+		mgmtClient := input.BootstrapClusterProxy.GetClient()
+		capdNodeUpdateTaskTemplate := &updatev1beta1.DockerNodeUpdateTaskTemplate{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: namespace.Name,
+				Name:      clusterName + "-nodeupdate",
+			},
+			Spec: updatev1beta1.DockerNodeUpdateTaskTemplateSpec{
+				Template: updatev1beta1.DockerNodeUpdateTaskTemplateResource{
+					Spec: updatev1beta1.DockerNodeUpdateTaskSpec{
+						NewMachineSpec: updatev1beta1.MachineSpec{
+							Version: "v1.29.0",
+						},
+					},
+				},
+			},
+		}
+		Expect(mgmtClient.Create(ctx, capdNodeUpdateTaskTemplate)).NotTo(HaveOccurred())
+
+		machineList := &clusterv1.MachineList{}
+		Expect(mgmtClient.List(ctx, machineList, client.MatchingLabels{clusterv1.ClusterNameLabel: clusterName, clusterv1.MachineControlPlaneLabel: ""})).NotTo(HaveOccurred())
+		for _, m := range machineList.Items {
+			m.Annotations[updatev1beta1.UpdateTaskAnnotationName] = clusterName
+			Expect(mgmtClient.Update(ctx, &m)).NotTo(HaveOccurred())
+		}
+
+		controlplaneList := &controlplanev1.KubeadmControlPlaneList{}
+		Expect(mgmtClient.List(ctx, controlplaneList, client.MatchingLabels{clusterv1.ClusterNameLabel: clusterName})).NotTo(HaveOccurred())
+
+		task := &updatev1beta1.UpdateTask{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: namespace.Name,
+				Name:      clusterName,
+			},
+			Spec: updatev1beta1.UpdateTaskSpec{
+				ClusterRef: &corev1.ObjectReference{
+					APIVersion: clusterv1.GroupVersion.String(),
+					Kind:       "Cluster",
+					Name:       clusterName,
+				},
+				ControlPlaneRef: &corev1.ObjectReference{
+					APIVersion: controlplanev1.GroupVersion.String(),
+					Kind:       "KubeadmControlPlane",
+					Name:       controlplaneList.Items[0].Name,
+				},
+				MachinesRequireUpdate: []corev1.ObjectReference{},
+				NewMachineSpec: updatev1beta1.MachineSpec{
+					Version: "v1.29.3",
+				},
+				NodeUpdateTemplate: updatev1beta1.NodeUpdateTaskTemplateSpec{
+					InfrastructureRef: corev1.ObjectReference{
+						APIVersion: updatev1beta1.GroupVersion.String(),
+						Kind:       "DockerNodeUpdateTaskTemplate",
+						Name:       capdNodeUpdateTaskTemplate.Name,
+					},
+				},
+				TargetPhase: updatev1beta1.UpdateTaskPhaseUpdate,
+			},
+		}
+		Expect(mgmtClient.Create(ctx, task)).NotTo(HaveOccurred())
+
+		// Check if updateTask completed by:
+		// updateTask.status.state = Updated
+		// all machines in scope has condition MachineUpToDate to True
+		Eventually(func(g Gomega) {
+			task2 := &updatev1beta1.UpdateTask{}
+			g.Expect(mgmtClient.Get(ctx, types.NamespacedName{Namespace: task.Namespace, Name: task.Name}, task2)).NotTo(HaveOccurred())
+			g.Expect(task2.Status.State).To(Equal(updatev1beta1.UpdateTaskStateUpdated))
+
+			machineList2 := &clusterv1.MachineList{}
+			g.Expect(mgmtClient.List(ctx, machineList2, client.MatchingLabels{clusterv1.ClusterNameLabel: clusterName, clusterv1.MachineControlPlaneLabel: ""})).NotTo(HaveOccurred())
+			for _, m := range machineList2.Items {
+				g.Expect(conditions.IsTrue(&m, updatev1beta1.MachineUpToDate)).To(Equal(true))
+			}
+
+		}, 120*time.Second, 1*time.Second).Should(Succeed())
 
 		By("PASSED!")
 	})

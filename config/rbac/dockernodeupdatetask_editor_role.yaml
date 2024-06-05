@@ -1,0 +1,27 @@
+# permissions for end users to edit dockernodeupdatetasks.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: cluster-api-inplace-updater
+    app.kubernetes.io/managed-by: kustomize
+  name: dockernodeupdatetask-editor-role
+rules:
+- apiGroups:
+  - update.extension.cluster.x-k8s.io
+  resources:
+  - dockernodeupdatetasks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - update.extension.cluster.x-k8s.io
+  resources:
+  - dockernodeupdatetasks/status
+  verbs:
+  - get
