@@ -198,6 +198,8 @@ func (r *UpdateTaskReconciler) reconcileNormal(ctx context.Context, logger logr.
 		}
 	}
 
+	//TODO: handle machineDeployment preflight check
+
 	// handle controlplane preflight check
 	if scope.Task.Spec.ControlPlaneRef != nil {
 		if scope.Task.Spec.ControlPlaneRef.Kind == "KubeadmControlPlane" {
